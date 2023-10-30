@@ -25,6 +25,13 @@ int main(int argc, char * argv[])
    printf("api: %s\n", config.api);
    printf("initpull: %d\n", config.initpull);
 
+   //Make an initial request to the status endpoint
+   CURL * statuscurl = curlget_api("status", &config);
+   char * response = NULL;
+   curl_setupcallback(statuscurl, response);
+
+
+
    return 0;
 }
 

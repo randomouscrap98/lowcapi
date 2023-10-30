@@ -5,7 +5,8 @@
 #include "config.h"
 #include "toml.h"
 
-const char LC_DEFAULTCONFIG[] = "config.toml";
+#define LCCONF_ERRBUF 512
+const char LCCONF_DEFAULTCONFIG[] = "config.toml";
 
 static void error(char* msg, char* msg1)
 {
@@ -18,10 +19,10 @@ struct LowcapiConfig lc_read_config(const char * filepath)
    struct LowcapiConfig result = { 0 };
 
    if(!filepath)
-      filepath = LC_DEFAULTCONFIG;
+      filepath = LCCONF_DEFAULTCONFIG;
 
    FILE* fp;
-   char errbuf[LC_ERRBUF];
+   char errbuf[LCCONF_ERRBUF];
 
    // 1. Read and parse toml file
    fp = fopen(filepath, "r");

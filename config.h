@@ -1,13 +1,12 @@
 #ifndef LC_CONFIG_GUARD
 #define LC_CONFIG_GUARD
 
-#define LC_URLMAXLENGTH 256
-#define LC_ERRBUF 512
+#define LCCONF_URLMAXLENGTH 128
 
 struct LowcapiConfig
 {
    //Yes that's right, the memory is stored in the config object. Sorry!
-   char api[LC_URLMAXLENGTH];
+   char api[LCCONF_URLMAXLENGTH];
    unsigned short initpull;
 };
 
