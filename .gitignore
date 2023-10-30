@@ -3,3 +3,4 @@ ignore/
 *.so
 token
 lowcapi
+config.toml

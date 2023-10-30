@@ -1,6 +1,7 @@
-#include "toml.h"
-#include "csv.h"
 #include <stdio.h>
+
+#include "csv.h"
+#include "config.c"
 
 int main()
 {
