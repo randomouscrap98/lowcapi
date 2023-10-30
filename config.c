@@ -39,7 +39,7 @@ struct LowcapiConfig lc_read_config(const char * filepath)
 
    // It's ok if these things aren't found
    toml_datum_t api = toml_string_in(conf, "api");
-   toml_datum_t initpull = toml_string_in(conf, "initpull");
+   toml_datum_t initpull = toml_int_in(conf, "initpull");
 
    // I'm still a bit rusty on C: apparently strncpy is dumb and bad and rarely
    // does what you want, so people suggested sprintf. I'm using snprintf
