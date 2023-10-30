@@ -4,11 +4,11 @@
 
 CC = gcc
 CFLAGS_common = -Wall -Ideps
-LDFLAGS = -lncurses
+LDFLAGS = -lncurses -lcurl
 PRG = lowcapi
 
 # -- The actual part you may need to modify if you add stuff --
-SRCS = main.c config.c deps/toml.c deps/csv.c
+SRCS = main.c config.c api.c deps/toml.c deps/csv.c
 OBJS = $(SRCS:.c=.o)
 
 
