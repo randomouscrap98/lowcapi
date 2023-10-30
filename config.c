@@ -14,6 +14,22 @@ static void error(char* msg, char* msg1)
     exit(1);
 }
 
+static int loadstring(toml_table_t * conf, const char * key, char * dest, size_t size)
+{
+   toml_datum_t value = toml_string_in(conf, key);
+
+   // I'm still a bit rusty on C: apparently strncpy is dumb and bad and rarely
+   // does what you want, so people suggested sprintf. I'm using snprintf
+   if(value.ok) { 
+      snprintf(dest, size, "%s", value.u.s); 
+      free(value.u.s); //README says we must free it... 
+      return 1;
+   }
+   else {
+      return 0;
+   }
+}
+
 struct LowcapiConfig lc_read_config(const char * filepath)
 {
    struct LowcapiConfig result = { 0 };
@@ -39,14 +55,14 @@ struct LowcapiConfig lc_read_config(const char * filepath)
    }
 
    // It's ok if these things aren't found
-   toml_datum_t api = toml_string_in(conf, "api");
-   toml_datum_t initpull = toml_int_in(conf, "initpull");
+   loadstring(conf, "api", result.api, sizeof(result.api));
+   loadstring(conf, "tokenfile", result.tokenfile, sizeof(result.tokenfile));
 
-   // I'm still a bit rusty on C: apparently strncpy is dumb and bad and rarely
-   // does what you want, so people suggested sprintf. I'm using snprintf
-   if(api.ok) { snprintf(result.api, sizeof(result.api), "%s", api.u.s); }
+   toml_datum_t initpull = toml_int_in(conf, "initpull");
    if(initpull.ok) { result.initpull = initpull.u.i; }
 
+   toml_free(conf);
+   
    return result;
 }
 
