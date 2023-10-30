@@ -53,8 +53,8 @@ size_t curl_writecallback(void *contents, size_t size, size_t nmemb, char **outp
     return totalSize;
 }
 
-void curl_setupcallback(CURL * curl, char * response)
+void curl_setupcallback(CURL * curl, char ** response)
 {
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_writecallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
 }

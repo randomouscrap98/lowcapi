@@ -6,7 +6,7 @@
 #include "config.h"
 #include "api.h"
 
-static void error(char* msg, char* msg1)
+static void error(const char* msg, const char* msg1)
 {
    fprintf(stderr, "ERROR: %s%s\n", msg, msg1?msg1:"");
    exit(1);
@@ -28,9 +28,20 @@ int main(int argc, char * argv[])
    //Make an initial request to the status endpoint
    CURL * statuscurl = curlget_api("status", &config);
    char * response = NULL;
-   curl_setupcallback(statuscurl, response);
+   curl_setupcallback(statuscurl, &response);
 
+   CURLcode statusres = curl_easy_perform(statuscurl);
+   if (statusres != CURLE_OK) {
+      curl_easy_cleanup(statuscurl);
+      error("Couldn't get status endpoint - ", curl_easy_strerror(statusres));
+   }
 
+   if (response) {
+      printf("Status response:\n%s\n", response);
+      free(response); 
+   } else {
+      error("Failed to fetch response data", NULL);
+   }
 
    return 0;
 }
