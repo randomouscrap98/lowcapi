@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "csv.h"
-#include "config.c"
+#include "config.h"
 
 int main()
 {
