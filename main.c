@@ -2,7 +2,11 @@
 #include <stdlib.h>
 #include <curl/curl.h>
 
+//Deps
 #include "csv.h"
+#include "log.h"
+
+//Our own crap
 #include "config.h"
 #include "api.h"
 
@@ -14,16 +18,18 @@ static void error(const char* msg, const char* msg1)
 
 int main(int argc, char * argv[])
 {
+   struct LowcapiConfig config = lc_read_config(argc > 1 ? argv[1] : NULL);
+
+   lc_setup_logging(&config);
+   log_info("Program started");
+   lc_log_config(&config);
+
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
       error("libcurl initialization failed", NULL);
    }
    if (atexit(curl_global_cleanup) != 0) {
       error("couldn't register libcurl cleanup", NULL);
    }
-
-   struct LowcapiConfig config = lc_read_config(argc > 1 ? argv[1] : NULL);
-   printf("api: %s\n", config.api);
-   printf("initpull: %d\n", config.initpull);
 
    //Make an initial request to the status endpoint
    CURL * statuscurl = curlget_api("status", &config);

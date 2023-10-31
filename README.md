@@ -1,4 +1,4 @@
 ## Dependencies
 - gcc / make
-- libcurl
-- libncurses
+- libcurl      (linked against 4)
+- libncurses   (linked against 

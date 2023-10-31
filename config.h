@@ -9,8 +9,13 @@ struct LowcapiConfig
    char api[LCCONF_URLMAXLENGTH];
    unsigned short initpull;
    char tokenfile[LCCONF_URLMAXLENGTH];
+   char logfile[LCCONF_URLMAXLENGTH];
+   char loglevel[16];
 };
 
 struct LowcapiConfig lc_read_config(const char * filepath);
+
+void lc_setup_logging(struct LowcapiConfig * config);
+void lc_log_config(struct LowcapiConfig * config);
 
 #endif
