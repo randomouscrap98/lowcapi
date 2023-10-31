@@ -109,6 +109,8 @@ void lc_setup_logging(struct LowcapiConfig * config)
 //Log the configuration to the logging system
 void lc_log_config(struct LowcapiConfig * config)
 {
-   printf("api: %s\n", config->api);
-   printf("initpull: %d\n", config->initpull);
+   //char outbuf[2048];
+   log_debug("Configuration:\n  api: %s\n  initpull: %d\n  loglevel: %s\n  logfile: %s", 
+      config->api, config->initpull, config->loglevel, config->logfile);
+   //log_debug(
 }

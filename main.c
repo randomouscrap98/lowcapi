@@ -43,7 +43,7 @@ int main(int argc, char * argv[])
    }
 
    if (response) {
-      printf("Status response:\n%s\n", response);
+      log_debug("Status response:\n%s\n", response);
       free(response); 
    } else {
       error("Failed to fetch response data", NULL);
