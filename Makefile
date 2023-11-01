@@ -12,7 +12,7 @@ BASEDEPS = config.c api.c deps/toml.c deps/csv.c deps/log.c
 SRCS = main.c $(BASEDEPS)
 
 ifeq ($(CSYS),windows)
-    CFLAGS_common = -Wall -Ideps -IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib
+    CFLAGS_common = -Wall -Ideps -IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib -DBUILDWINDOWS
     LDFLAGS = -lpdcurses -lcurl
     PRG = lowcapi_win.exe
     # SRCS = main_windows.c $(BASEDEPS)

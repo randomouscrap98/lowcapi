@@ -2,8 +2,13 @@
 #include <stdlib.h>
 #include <curl/curl.h>
 
-//This works whether it's ncurses or pdcurses
-#include <curses.h>
+//You're SUPPOSED to be able to use just curses.h on any system and it'll be
+//portable, but in practice it just doesn't work like that... blegh
+#ifdef BUILDWINDOWS
+#include <pdcurses.h>
+#else
+#include <ncurses.h>
+#endif
 
 //Deps
 #include "csv.h"
