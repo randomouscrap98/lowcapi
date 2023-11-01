@@ -2,6 +2,11 @@
 # Most of this was taken from chatgpt, I'm just too stupid and lazy these 
 # days to go searching and remembering how to do all this
 
+# log.c - https://github.com/rxi/log.c
+# csv.c - https://github.com/semitrivial/csv_parser
+# toml.c - https://github.com/cktan/tomlc99/tree/master
+# pdcurses - https://github.com/wmcbrine/PDCurses
+
 CC = gcc
 CFLAGS_common = -Wall -Ideps
 LDFLAGS = -lncurses -lcurl
@@ -15,7 +20,6 @@ ifeq ($(CSYS),windows)
     CFLAGS_common = -Wall -Ideps -IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib -DBUILDWINDOWS
     LDFLAGS = -lpdcurses -lcurl
     PRG = lowcapi_win.exe
-    # SRCS = main_windows.c $(BASEDEPS)
 endif
 
 OBJS = $(SRCS:.c=.o)

@@ -34,9 +34,15 @@ int main(int argc, char * argv[])
 
    lc_curlinit();
 
+   printf("Checking connection to %s...\n", config.api);
+
    //Make an initial request to the status endpoint
    char * response = lc_getany("status", &config, 1);
    log_debug("API Status response:\n%s\n", response);
+   free(response);
+
+   printf("Connection OK!\n");
+
 
    return 0;
 }
