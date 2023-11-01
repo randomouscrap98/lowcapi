@@ -24,30 +24,11 @@ int main(int argc, char * argv[])
    log_info("Program started");
    lc_log_config(&config);
 
-   if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
-      error("libcurl initialization failed", NULL);
-   }
-   if (atexit(curl_global_cleanup) != 0) {
-      error("couldn't register libcurl cleanup", NULL);
-   }
+   lc_curlinit();
 
    //Make an initial request to the status endpoint
-   CURL * statuscurl = curlget_api("status", &config);
-   char * response = NULL;
-   curl_setupcallback(statuscurl, &response);
-
-   CURLcode statusres = curl_easy_perform(statuscurl);
-   if (statusres != CURLE_OK) {
-      curl_easy_cleanup(statuscurl);
-      error("Couldn't get status endpoint - ", curl_easy_strerror(statusres));
-   }
-
-   if (response) {
-      log_debug("Status response:\n%s\n", response);
-      free(response); 
-   } else {
-      error("Failed to fetch response data", NULL);
-   }
+   char * response = lc_getany("status", &config, 1);
+   log_debug("API Status response:\n%s\n", response);
 
    return 0;
 }
