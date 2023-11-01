@@ -17,12 +17,8 @@
 //Our own crap
 #include "config.h"
 #include "api.h"
+#include "screen.h"
 
-static void error(const char* msg, const char* msg1)
-{
-   fprintf(stderr, "ERROR: %s%s\n", msg, msg1?msg1:"");
-   exit(1);
-}
 
 int main(int argc, char * argv[])
 {
@@ -33,16 +29,30 @@ int main(int argc, char * argv[])
    lc_log_config(&config);
 
    lc_curlinit();
+   lc_setup_screen();
 
-   printf("Checking connection to %s...\n", config.api);
+   printw("Checking connection to %s...\n", config.api);
+   refresh();
 
    //Make an initial request to the status endpoint
    char * response = lc_getany("status", &config, 1);
    log_debug("API Status response:\n%s\n", response);
    free(response);
 
-   printf("Connection OK!\n");
+   print_color(LCSCL_OK, "Connection OK!\n");
+   refresh();
 
+   char * token = lc_gettoken(&config);
+
+   if(!token) {
+      print_color(LCSCL_WARN, "No token file found, please login\n");
+      refresh();
+      while(1) {
+         char username[100];
+         char password[100];
+         
+      }
+   }
 
    return 0;
 }

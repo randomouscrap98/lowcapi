@@ -10,12 +10,21 @@
 #define LCCONF_ERRBUF 512
 const char LCCONF_DEFAULTCONFIG[] = "config.toml";
 
-static void error(char * fmt, ...)//char* msg1)
+static void error(char * fmt, ...)
 {
    va_list args;
    va_start(args, fmt);
-   vfprintf(stderr, fmt, args);
-   //fprintf(stderr, "ERROR: %s%s\n", msg, msg1?msg1:"");
+
+   char prepend[] = "ERROR: ";
+   char * newfmt = malloc(strlen(prepend) + strlen(fmt) + 1);
+   if(newfmt) {
+      sprintf(newfmt, "%s%s", prepend, fmt);
+      vfprintf(stderr, newfmt, args);
+      free(newfmt);
+   }
+   else {
+      vfprintf(stderr, fmt, args);
+   }
    exit(1);
 }
 

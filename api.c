@@ -9,19 +9,32 @@
 
 #define LCAPI_URLMAXLENGTH 256
 
-static void error(char* msg, const char* msg1)
+static void error(char * fmt, ...)
 {
-   fprintf(stderr, "ERROR: %s%s\n", msg, msg1?msg1:"");
+   va_list args;
+   va_start(args, fmt);
+
+   char prepend[] = "ERROR: ";
+   char * newfmt = malloc(strlen(prepend) + strlen(fmt) + 1);
+   if(newfmt) {
+      sprintf(newfmt, "%s%s", prepend, fmt);
+      vfprintf(stderr, newfmt, args);
+      free(newfmt);
+   }
+   else {
+      vfprintf(stderr, fmt, args);
+   }
    exit(1);
 }
 
 void lc_curlinit()
 {
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
-      error("libcurl initialization failed", NULL);
+      error("libcurl initialization failed");
    }
    if (atexit(curl_global_cleanup) != 0) {
-      error("couldn't register libcurl cleanup", NULL);
+      curl_global_cleanup();
+      error("couldn't register libcurl cleanup");
    }
    log_debug("Setup libcurl!");
 }
@@ -31,7 +44,7 @@ CURL * lc_curlget(char * url)
 {
    CURL * curl = curl_easy_init(); 
    if(!curl) {
-      error("Couldn't make curl object to - ", url);
+      error("Couldn't make curl object to %s", url);
    }
 
    curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -83,16 +96,11 @@ char * lc_getany(char * endpoint, struct LowcapiConfig * config, int fail_critic
 
    if(fail_critical)
    {
-      char errbuf[512];
-
       if (statusres != CURLE_OK) {
-         snprintf(errbuf, sizeof(errbuf), "Couldn't get %s endpoint - ", endpoint);
-         error(errbuf, curl_easy_strerror(statusres));
+         error("Couldn't get %s endpoint - %s", endpoint, curl_easy_strerror(statusres));
       }
-
       if (!response) {
-         snprintf(errbuf, sizeof(errbuf), "Failed to fetch response data for %s endpoint - ", endpoint);
-         error(errbuf, NULL);
+         error("Failed to fetch response data for %s endpoint", endpoint);
       }
    }
 

@@ -13,7 +13,7 @@ LDFLAGS = -lncurses -lcurl
 PRG = lowcapi
 
 # -- The actual part you may need to modify if you add stuff --
-BASEDEPS = config.c api.c deps/toml.c deps/csv.c deps/log.c
+BASEDEPS = config.c api.c screen.c deps/toml.c deps/csv.c deps/log.c
 SRCS = main.c $(BASEDEPS)
 
 ifeq ($(CSYS),windows)
