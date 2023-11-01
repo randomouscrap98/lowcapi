@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <curl/curl.h>
 
+//This works whether it's ncurses or pdcurses
+#include <curses.h>
+
 //Deps
 #include "csv.h"
 #include "log.h"

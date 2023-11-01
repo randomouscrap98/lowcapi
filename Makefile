@@ -13,10 +13,9 @@ SRCS = main.c $(BASEDEPS)
 
 ifeq ($(CSYS),windows)
     CFLAGS_common = -Wall -Ideps -IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib
-    # BASEDEPS = config.c deps/toml.c deps/csv.c deps/log.c
-    LDFLAGS = -lcurl
+    LDFLAGS = -lpdcurses -lcurl
     PRG = lowcapi_win.exe
-    SRCS = main_windows.c $(BASEDEPS)
+    # SRCS = main_windows.c $(BASEDEPS)
 endif
 
 OBJS = $(SRCS:.c=.o)
