@@ -31,7 +31,7 @@ int main(int argc, char * argv[])
    if (atexit(curl_global_cleanup) != 0) {
       error("couldn't register libcurl cleanup", NULL);
    }
-	printf("DID CURL??\n");
+	printf("DID CURL SETUP??\n");
 
    //Make an initial request to the status endpoint
    CURL * statuscurl = curlget_api("status", &config);

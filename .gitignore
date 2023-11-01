@@ -4,6 +4,8 @@ ignore/
 token
 lowcapi
 lowcapi_win.exe
+a.out
+a.exe
 config.toml
 tags
 log.txt
