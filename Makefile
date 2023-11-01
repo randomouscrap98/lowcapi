@@ -7,16 +7,19 @@ CFLAGS_common = -Wall -Ideps
 LDFLAGS = -lncurses -lcurl
 PRG = lowcapi
 
-WINLDFLAGS = -lcurl
-WINPRG = lowcapi_win.exe
-
 # -- The actual part you may need to modify if you add stuff --
 BASEDEPS = config.c api.c deps/toml.c deps/csv.c deps/log.c
 SRCS = main.c $(BASEDEPS)
+
+ifeq ($(CSYS),windows)
+    CFLAGS_common = -Wall -Ideps -IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib
+    LDFLAGS = -lcurl
+    PRG = lowcapi_win.exe
+    SRCS = main_windows.c $(BASEDEPS)
+endif
+
 OBJS = $(SRCS:.c=.o)
 
-WINSRCS = main.c $(BASEDEPS)
-WINOBJS = $(WINSRCS:.c=.o)
 
 CONFIG = release
 
@@ -35,8 +38,6 @@ endif
 # First target always run, so it's "all" of course
 all: $(PRG)
 
-windows : $(WINPRG)
-
 run: all
 	./$(PRG)
 
@@ -44,12 +45,9 @@ run: all
 $(PRG): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
 
-$(WINPRG): $(WINOBJS)
-	$(CC) $(CFLAGS) -o $@ $(WINOBJS) $(WINLDFLAGS)
-
 # Generic command to build all .c files into .o files
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f $(PRG) $(WINPRG) $(OBJS) $(WINOBJS)
+	rm -f $(PRG) $(OBJS)
