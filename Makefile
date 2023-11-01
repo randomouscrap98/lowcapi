@@ -7,10 +7,16 @@ CFLAGS_common = -Wall -Ideps
 LDFLAGS = -lncurses -lcurl
 PRG = lowcapi
 
+WINLDFLAGS = -lcurl
+WINPRG = lowcapi_win.exe
+
 # -- The actual part you may need to modify if you add stuff --
-SRCS = main.c config.c api.c deps/toml.c deps/csv.c deps/log.c
+BASEDEPS = config.c api.c deps/toml.c deps/csv.c deps/log.c
+SRCS = main.c $(BASEDEPS)
 OBJS = $(SRCS:.c=.o)
 
+WINSRCS = main.c $(BASEDEPS)
+WINOBJS = $(WINSRCS:.c=.o)
 
 CONFIG = release
 
@@ -24,10 +30,12 @@ endif
 # chatgpt told me that .PHONY is there to ensure the command always runs, even
 # if there's a file named as such. But I think it got it wrong when it didn't 
 # include 'all' in the list, see https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: clean all run
+.PHONY: clean all run windows
 
 # First target always run, so it's "all" of course
 all: $(PRG)
+
+windows : $(WINPRG)
 
 run: all
 	./$(PRG)
@@ -36,9 +44,12 @@ run: all
 $(PRG): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
 
+$(WINPRG): $(WINOBJS)
+	$(CC) $(CFLAGS) -o $@ $(WINOBJS) $(WINLDFLAGS)
+
 # Generic command to build all .c files into .o files
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f $(PRG) $(OBJS)
+	rm -f $(PRG) $(WINPRG) $(OBJS) $(WINOBJS)
