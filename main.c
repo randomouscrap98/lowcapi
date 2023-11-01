@@ -47,11 +47,11 @@ int main(int argc, char * argv[])
    if(!token) {
       print_color(LCSCL_WARN, "No token file found, please login\n");
       refresh();
-      while(1) {
+      //while(1) {
          char username[100];
          char password[100];
-         
-      }
+         getch();
+      //}
    }
 
    return 0;
