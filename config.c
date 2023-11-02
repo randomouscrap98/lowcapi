@@ -56,10 +56,7 @@ struct LowcapiConfig lc_read_config(const char * filepath)
    // 1. Read and parse toml file
    fp = fopen(filepath, "r");
    if (!fp) {
-      //snprintf(errbuf, sizeof(errbuf), "cannot open %s - ", filepath);
-      //error(errbuf, strerror(errno));
       error("Cannot open %s - %s", filepath, strerror(errno));
-            //errbuf, strerror(errno));
    }
 
    char errbuf[LCCONF_ERRBUF];
@@ -115,9 +112,6 @@ void lc_setup_logging(struct LowcapiConfig * config)
       //preserving logs is necessary!!
       fp = fopen(config->logfile, "w");
       if (!fp) {
-         //char errbuf[LCCONF_ERRBUF];
-         //snprintf(errbuf, sizeof(errbuf), "cannot open %s for logging", config->logfile);
-         //error(errbuf, NULL);
          error("Cannot open %s for logging", config->logfile);
       }
       //Note: guess we can't close that filepointer. Probably ok?
@@ -173,4 +167,8 @@ void lc_storetoken(struct LowcapiConfig * config, char * token)
    if (!fp) {
       error("Could not open token file for writing: %s", config->tokenfile);
    }
+
+   fprintf(fp, "%s", token);
+
+   fclose(fp);
 }
