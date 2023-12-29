@@ -74,10 +74,11 @@ void lc_getany_simple(char * buffer, int maxlength, int password)
          if(index > 0) {
             --index;
             mvprintw(starty, startx + index, " ");  // Clear the character on the screen
+            move(starty, startx + index);
          }
       } else if (isprint(ch) && index < maxlength - 1) {
          buffer[index++] = ch;
-         mvprintw(starty, startx + index - 1, "*");  // Display '*' on the screen
+         mvprintw(starty, startx + index - 1, "%c", password ? '*' : ch);  // Display '*' on the screen
       }
       refresh();
    }

@@ -53,8 +53,9 @@ int main(int argc, char * argv[])
       while(1) {
          printw("Username: ");
          lc_getinput_simple(username, inputlength);
-         printw("Password: ");
+         printw("\nPassword: ");
          lc_getpass_simple(password, inputlength);
+         printw("\n");
       }
    }
 
