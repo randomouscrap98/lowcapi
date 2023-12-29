@@ -4,6 +4,7 @@
 #include <ctype.h>
 
 #include "screen.h"
+#include "log.h"
 
 //You're SUPPOSED to be able to use just curses.h on any system and it'll be
 //portable, but in practice it just doesn't work like that... blegh
@@ -47,12 +48,13 @@ void lc_setup_screen()
    //wouldn't run... maybe? I guess we could call it immediately
    if (atexit(lc_end_screen) != 0) {
       lc_end_screen();
-      error("couldn't register libcurl cleanup");
+      error("couldn't register ncurses screen cleanup");
    }
 
    init_pair(LCSCL_OK, COLOR_GREEN, COLOR_BLACK);
    init_pair(LCSCL_ERR, COLOR_RED, COLOR_BLACK);
    init_pair(LCSCL_WARN, COLOR_YELLOW, COLOR_BLACK);
+   log_debug("Setup screen!");
 }
 
 //chatgpt generated some of this

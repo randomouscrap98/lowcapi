@@ -43,7 +43,7 @@ endif
 all: $(PRG)
 
 run: all
-	./$(PRG)
+	./$(PRG) 2> err.txt
 
 # Main compilation, should produce 'lowcapi'
 $(PRG): $(OBJS)

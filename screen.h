@@ -20,7 +20,4 @@ void lc_getany_simple(char * buffer, int maxlength, int password);
 #define lc_getpass_simple(b, l) lc_getany_simple(b, l, 1)
 #define lc_getinput_simple(b, l) lc_getany_simple(b, l, 0)
 
-//void lc_getpass_simple(char * buffer, int maxlength); // { lc_getany_simple(buffer, maxlength, 1); }
-//void lc_getinput_simple(char * buffer, int maxlength);// { lc_getany_simple(buffer, maxlength, 0); }
-
 #endif

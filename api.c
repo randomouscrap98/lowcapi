@@ -19,10 +19,12 @@ static void error(char * fmt, ...)
    if(newfmt) {
       sprintf(newfmt, "%s%s", prepend, fmt);
       vfprintf(stderr, newfmt, args);
+      //log_error(newfmt, args);
       free(newfmt);
    }
    else {
       vfprintf(stderr, fmt, args);
+      //log_error(fmt, args);
    }
    exit(1);
 }
