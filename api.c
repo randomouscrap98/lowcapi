@@ -10,7 +10,6 @@
 #define LCAPI_URLMAXLENGTH 256
 
 #define LCFAIL(fc, ...) { if(fc) { error(__VA_ARGS__); } else { log_error(__VA_ARGS__); } }
-//#define LCFCLOG(...) LCFAILCRITICAL(fail_critical, __VA_ARGS__)
 
 static void error(char * fmt, ...)
 {
@@ -22,12 +21,10 @@ static void error(char * fmt, ...)
    if(newfmt) {
       sprintf(newfmt, "%s%s", prepend, fmt);
       vfprintf(stderr, newfmt, args);
-      //log_error(newfmt, args);
       free(newfmt);
    }
    else {
       vfprintf(stderr, fmt, args);
-      //log_error(fmt, args);
    }
    exit(1);
 }
@@ -98,10 +95,13 @@ char * lc_getany(char * endpoint, struct LowcapiConfig * config, int fail_critic
 
    CURLcode statusres = curl_easy_perform(statuscurl);
    curl_easy_cleanup(statuscurl);
-   log_debug("Setup libcurl!");
+   log_debug("CURL GET: %s", endpoint); //This can expose passwords in the log file!
 
    if(statusres != CURLE_OK)
-      LCFAIL(fail_critical, "Couldn't get %s endpoint - %s", endpoint, curl_easy_strerror(statusres));
+   {
+      const char * cerr = curl_easy_strerror(statusres);
+      LCFAIL(fail_critical, "Couldn't get '%s' endpoint - %s", endpoint, cerr);
+   }
    if (!response)
       LCFAIL(fail_critical, "Failed to fetch response data for %s endpoint", endpoint);
 
@@ -115,7 +115,10 @@ char * lc_login(char * username, char * password, struct LowcapiConfig * config,
    CURL * curlconv = curl_easy_init(); 
 
    if(!curlconv)
+   {
       LCFAIL(fail_critical, "Could not make curl object!");
+      return NULL;
+   }
 
    //Have to escape the username and password
    char * usernew = curl_easy_escape(curlconv, username, strlen(username));
@@ -133,8 +136,13 @@ char * lc_login(char * username, char * password, struct LowcapiConfig * config,
    if(usernew) curl_free(usernew);
    if(passnew) curl_free(passnew);
 
-   if(!url[0])
+   if(url[0])
+   {
+      return lc_getany(url, config, fail_critical);
+   }
+   else
+   {
       LCFAIL(fail_critical, "Curl escape failed!");
-
-   return lc_getany(url, config, fail_critical);
+      return NULL;
+   }
 }

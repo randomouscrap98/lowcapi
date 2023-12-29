@@ -14,5 +14,6 @@ size_t lc_curl_writecallback(void *contents, size_t size, size_t nmemb, char **o
 void lc_curl_setupcallback(CURL * curl, char ** response);
 
 char * lc_getany(char * endpoint, struct LowcapiConfig * config, int fail_critical);
+char * lc_login(char * username, char * password, struct LowcapiConfig * config, int fail_critical);
 
 #endif

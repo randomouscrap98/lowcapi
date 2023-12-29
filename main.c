@@ -50,19 +50,27 @@ int main(int argc, char * argv[])
    if(!token) {
       print_color(LCSCL_WARN, "No token file found, please login\n");
       refresh();
-      while(1) {
+      while(!token) {
          printw("Username: ");
          lc_getinput_simple(username, inputlength);
          printw("\nPassword: ");
          lc_getpass_simple(password, inputlength);
-         printw("\n");
+         printw("\nLogging in...\n");
          refresh();
-
-         //token = lc_getany("status", &config, 1);
-         //log_debug("API Status response:\n%s\n", response);
-         //free(response);
+         token = lc_login(username, password, &config, 0);
+         if(token)
+         {
+            printw("Token: %s\n", token);
+            refresh();
+         }
       }
    }
+
+   log_info("Program end");
+   printw("Program end\n");
+   refresh();
+
+   getch();
 
    return 0;
 }
