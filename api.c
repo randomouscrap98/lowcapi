@@ -34,10 +34,10 @@ void lc_curlinit()
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
       error("libcurl initialization failed");
    }
-   if (atexit(curl_global_cleanup) != 0) {
-      curl_global_cleanup();
-      error("couldn't register libcurl cleanup");
-   }
+   //if (atexit(curl_global_cleanup) != 0) {
+   //   curl_global_cleanup();
+   //   error("couldn't register libcurl cleanup");
+   //}
    log_debug("Setup libcurl!");
 }
 
@@ -51,6 +51,7 @@ CURL * lc_curlget(char * url)
 
    curl_easy_setopt(curl, CURLOPT_URL, url);
    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
+   curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
 
    return curl;
 }
@@ -62,12 +63,12 @@ CURL * lc_curlget_api(char * endpoint, struct LowcapiConfig * config)
    return lc_curlget(url);
 }
 
-CURL * lc_curlget_small(char * endpoint, struct LowcapiConfig * config)
-{
-   char url[LCAPI_URLMAXLENGTH];
-   snprintf(url, sizeof(url), "%s/small/%s", config->api, endpoint);
-   return lc_curlget(url);
-}
+//CURL * lc_curlget_small(char * endpoint, struct LowcapiConfig * config)
+//{
+//   char url[LCAPI_URLMAXLENGTH];
+//   snprintf(url, sizeof(url), "%s/small/%s", config->api, endpoint);
+//   return lc_curlget(url);
+//}
 
 // Taken from chatgpt, oof
 size_t lc_curl_writecallback(void *contents, size_t size, size_t nmemb, char **output) {
@@ -103,7 +104,9 @@ char * lc_getany(char * endpoint, struct LowcapiConfig * config, int fail_critic
       LCFAIL(fail_critical, "Couldn't get '%s' endpoint - %s", endpoint, cerr);
    }
    if (!response)
+   {
       LCFAIL(fail_critical, "Failed to fetch response data for %s endpoint", endpoint);
+   }
 
    return response;
 }
@@ -128,9 +131,14 @@ char * lc_login(char * username, char * password, struct LowcapiConfig * config,
 
    //Only construct a string if they both escaped
    if(usernew && passnew)
-      snprintf(url, LCAPI_URLMAXLENGTH, "small/Login?username=%s&password=%s", usernew, passnew);
+   {
+      snprintf(url, LCAPI_URLMAXLENGTH, "small/Login?username=%s&password=%s&expireSeconds=%d", 
+            usernew, passnew, config->tokenexpireseconds);
+   }
    else
+   {
       url[0] = 0;
+   }
 
    //Free the unneeded new stuff (we already constructed the url)
    if(usernew) curl_free(usernew);

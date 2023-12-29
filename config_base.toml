@@ -1,6 +1,7 @@
 api = "proto://path/to/api"
 initpull = 100
 postheight = 4
+tokenexpireseconds = 31536000
 tokenfile = "token"
 loglevel = "debug"
 logfile = "log.txt"

@@ -9,6 +9,7 @@ struct LowcapiConfig
    char api[LCCONF_URLMAXLENGTH];
    int initpull;
    int postheight;
+   int tokenexpireseconds;
    char tokenfile[LCCONF_URLMAXLENGTH];
    char logfile[LCCONF_URLMAXLENGTH];
    char loglevel[16];

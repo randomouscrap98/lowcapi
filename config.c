@@ -77,6 +77,9 @@ struct LowcapiConfig lc_read_config(const char * filepath)
    if(initpull.ok) { result.initpull = initpull.u.i; }
    toml_datum_t postheight = toml_int_in(conf, "postheight");
    if(postheight.ok) { result.postheight = postheight.u.i; }
+   toml_datum_t tokenexpire = toml_int_in(conf, "tokenexpireseconds");
+   if(tokenexpire.ok) { result.tokenexpireseconds = tokenexpire.u.i; }
+   else { result.tokenexpireseconds = 0; }
 
    toml_free(conf);
    

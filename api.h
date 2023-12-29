@@ -8,7 +8,7 @@
 void lc_curlinit();
 CURL * lc_curlget(char * url);
 CURL * lc_curlget_api(char * endpoint, struct LowcapiConfig * config);
-CURL * lc_curlget_small(char * endpoint, struct LowcapiConfig * config);
+//CURL * lc_curlget_small(char * endpoint, struct LowcapiConfig * config);
 
 size_t lc_curl_writecallback(void *contents, size_t size, size_t nmemb, char **output);
 void lc_curl_setupcallback(CURL * curl, char ** response);
