@@ -56,6 +56,11 @@ int main(int argc, char * argv[])
          printw("\nPassword: ");
          lc_getpass_simple(password, inputlength);
          printw("\n");
+         refresh();
+
+         //token = lc_getany("status", &config, 1);
+         //log_debug("API Status response:\n%s\n", response);
+         //free(response);
       }
    }
 
