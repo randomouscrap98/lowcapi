@@ -43,15 +43,19 @@ int main(int argc, char * argv[])
    refresh();
 
    char * token = lc_gettoken(&config);
+   const int inputlength = 100;
+   char username[inputlength];
+   char password[inputlength];
 
    if(!token) {
       print_color(LCSCL_WARN, "No token file found, please login\n");
       refresh();
-      //while(1) {
-         char username[100];
-         char password[100];
-         getch();
-      //}
+      while(1) {
+         printw("Username: ");
+         lc_getinput_simple(username, inputlength);
+         printw("Password: ");
+         lc_getpass_simple(password, inputlength);
+      }
    }
 
    return 0;

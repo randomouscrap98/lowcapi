@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "screen.h"
 
@@ -54,3 +55,31 @@ void lc_setup_screen()
    init_pair(LCSCL_WARN, COLOR_YELLOW, COLOR_BLACK);
 }
 
+//chatgpt generated some of this
+void lc_getany_simple(char * buffer, int maxlength, int password)
+{
+   // Save the initial cursor position
+   int starty, startx;
+   getyx(stdscr, starty, startx);
+
+   int index = 0;
+   int ch;
+
+   // Read characters until Enter is pressed
+   while ((ch = getch()) != '\n') {
+      // Handle backspace
+      if (ch == 127) {
+         if(index > 0) {
+            --index;
+            mvprintw(starty, startx + index, " ");  // Clear the character on the screen
+         }
+      } else if (isprint(ch) && index < maxlength - 1) {
+         buffer[index++] = ch;
+         mvprintw(starty, startx + index - 1, "*");  // Display '*' on the screen
+      }
+      refresh();
+   }
+
+   // Null-terminate the password string
+   buffer[index] = '\0';
+}
