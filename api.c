@@ -7,7 +7,6 @@
 #include "config.h"
 #include "log.h"
 
-#define LCAPI_URLMAXLENGTH 512
 
 #define LCFAIL(fc, ...) { if(fc) { error(__VA_ARGS__); } else { log_error(__VA_ARGS__); } }
 
@@ -41,25 +40,77 @@ void lc_curlinit()
    log_debug("Setup libcurl!");
 }
 
-// Return a CURL object pointing to the given url with GET, which you need to cleanup
-CURL * lc_curlget(char * url)
+// Order doesn't matter (I think). As such, "addvalue" really adds it to the
+// front. Much MUCH simpler.
+struct RequestValue * lc_addvalue(struct RequestValue * head, char * key, char * value)
 {
-   CURL * curl = curl_easy_init(); 
-   if(!curl) {
-      error("Couldn't make curl object to %s", url);
-   }
+   struct RequestValue * this = malloc(sizeof(struct RequestValue));
+   if(!this)
+      error("Couldn't allocate memory for request value!");
+   this->key = key;
+   this->value = value;
+   this->next = head;
 
-   curl_easy_setopt(curl, CURLOPT_URL, url);
-   curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
-
-   return curl;
+   //Item we created always becomes the new head. This greatly simplifies
+   //creating this stuff.
+   return this;
 }
 
-CURL * lc_curlget_api(char * endpoint, struct LowcapiConfig * config)
+//Recursively delete the entire value structure
+void lc_freeallvalues(struct RequestValue * head)
 {
-   char url[LCAPI_URLMAXLENGTH];
-   snprintf(url, sizeof(url), "%s/%s", config->api, endpoint);
-   return lc_curlget(url);
+   if(head)
+   {
+      lc_freeallvalues(head->next);
+      free(head);
+   }
+}
+
+char * lc_constructurl(struct HttpRequest * request, struct RequestValue * values)
+{
+   //Create the initial URL, which is the api url plus the request url plus
+   //some extra crap. The returned url may be quite large
+   size_t baselen = strlen(request->config->api) + strlen(request->endpoint) + 2;
+   char * url = malloc(sizeof(char) * (baselen + 1));
+   if(!url)
+      error("Couldn't allocate url string");
+   snprintf(url, baselen + 1, "%s/%s?", request->config->api, request->endpoint);
+
+   //Here is where you'd do your value appending
+
+   return url;
+}
+
+// Return a CURL object pointing to the given url with GET, which you need to cleanup
+// (the curl object, not the url)
+CURL * lc_curlget_api(struct HttpRequest * request, struct RequestValue * values)
+{
+   CURL * curl = curl_easy_init(); 
+   if(!curl)
+      error("Couldn't make curl object to %s", url);
+
+   struct curl_slist *headers = NULL;
+
+   if(request->token)
+   {
+      const char * prepend = "Authorization: Bearer ";
+      size_t bearermaxlen = LC_TOKENMAXLENGTH + strlen(prepend);
+      char * bearer = malloc(sizeof(char) * (bearermaxlen + 1));
+      if(!bearer)
+         error("Couldn't allocate memory for token header!");
+      snprintf(bearer, bearermaxlen, "%s%s", prepend, request->token);
+      headers = curl_slist_append(headers, bearer);
+   }
+
+   if(headers)
+      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+   char * url = lc_constructurl(request, values);
+   curl_easy_setopt(curl, CURLOPT_URL, url);
+   curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
+   free(url);
+
+   return curl;
 }
 
 // Taken from https://stackoverflow.com/a/2329792. 
@@ -90,11 +141,9 @@ struct HttpResponse * lc_curl_setupcallback(CURL * curl, char * url)
    response->status = 0;
    response->url = malloc(urllen);
 
+   //NOTE: don't need to cleanup stuff since we're using the hard "error" (I think)
    if(!response->url)
-   {
-      lc_freeresponse(response);
       error("Could not allocate initial response (url malloc)!");
-   }
 
    memcpy(response->url, url, urllen);
 
@@ -147,7 +196,7 @@ int lc_consumeresponse(struct HttpResponse * response, char ** output)
    return result;
 }
 
-struct HttpResponse * lc_getany(char * endpoint, struct LowcapiConfig * config, int fail_critical)
+struct HttpResponse * lc_getany(struct HttpRequest * request, struct RequestValue * values)
 {
    //Setup the request, including allocating the initial result object to fill later
    CURL * curl = lc_curlget_api(endpoint, config);

@@ -43,6 +43,7 @@ void lc_setup_screen()
    start_color();
    cbreak();
    noecho();
+   scrollok(stdscr, TRUE);
 
    //It's fine if we can't register it... exiting would be silly, it still
    //wouldn't run... maybe? I guess we could call it immediately
