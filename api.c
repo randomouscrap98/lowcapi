@@ -128,13 +128,18 @@ int lc_responseok(struct HttpResponse * response)
 int lc_consumeresponse(struct HttpResponse * response, char ** output)
 {
    int result = 0;
-   log_info("[%d] - %s", response->status, response->url);
+   log_info("[%ld] - %s", response->status, response->url);
+
+   //Always copy the response, it might have something valuable (like an error string)
+   if(response->response)
+   {
+      *output = response->response;
+      response->response = NULL;
+   }
 
    if(lc_responseok(response))
    {
       result = 1;
-      *output = response->response;
-      response->response = NULL;
    }
 
    lc_freeresponse(response);

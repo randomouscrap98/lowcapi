@@ -37,10 +37,10 @@ int main(int argc, char * argv[])
    //Make an initial request to the status endpoint
    struct HttpResponse * response = lc_getany("status", &config, 1);
    log_debug("API Status response:\n%s\n", response->response);
+   print_color(LCSCL_OK, "Connection OK! [%ld]\n", response->status);
    lc_freeresponse(response);
-
-   print_color(LCSCL_OK, "Connection OK!\n");
    refresh();
+
 
    char * token = lc_gettoken(&config);
    const int inputlength = 100;
@@ -60,6 +60,7 @@ int main(int argc, char * argv[])
          char * output = NULL;
          if(lc_consumeresponse(lc_login(username, password, &config, 0), &output))
          {
+            token = output;
             printw("Token: %s\n", token);
          }
          else if(output)
