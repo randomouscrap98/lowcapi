@@ -35,9 +35,9 @@ int main(int argc, char * argv[])
    refresh();
 
    //Make an initial request to the status endpoint
-   char * response = lc_getany("status", &config, 1);
-   log_debug("API Status response:\n%s\n", response);
-   free(response);
+   struct HttpResponse * response = lc_getany("status", &config, 1);
+   log_debug("API Status response:\n%s\n", response->response);
+   lc_freeresponse(response);
 
    print_color(LCSCL_OK, "Connection OK!\n");
    refresh();
@@ -57,12 +57,21 @@ int main(int argc, char * argv[])
          lc_getpass_simple(password, inputlength);
          printw("\nLogging in...\n");
          refresh();
-         token = lc_login(username, password, &config, 0);
-         if(token)
+         char * output = NULL;
+         if(lc_consumeresponse(lc_login(username, password, &config, 0), &output))
          {
             printw("Token: %s\n", token);
-            refresh();
          }
+         else if(output)
+         {
+            print_color(LCSCL_WARN, "Error: %s\n", output);
+            free(output);
+         }
+         else
+         {
+            print_color(LCSCL_WARN, "Error: UNKNOWN\n");
+         }
+         refresh();
       }
    }
 
