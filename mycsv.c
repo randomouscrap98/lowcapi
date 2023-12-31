@@ -240,6 +240,12 @@ static void csv_resetline(struct CsvLine * line, int freeouter)
    line->fieldcount = 0;
 }
 
+void csv_freeline(struct CsvLine * line)
+{
+   csv_resetline(line, 1);
+   free(line);
+}
+
 //Holder for line data as the line thing iterates.
 struct CsvLineWrapper
 {
@@ -310,3 +316,8 @@ int csv_iteratelines_f(char * csv, int (*linefunc)(int, struct CsvLine *, void *
 {
    return csv_iteratelines(csv, csv + strlen(csv) - 1, linefunc, state);
 }
+
+//struct CsvLine * csv_parseline(char * begin, char * end)
+//{
+//
+//}

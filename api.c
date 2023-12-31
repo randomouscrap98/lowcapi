@@ -257,6 +257,20 @@ struct HttpResponse * lc_login(char * username, char * password, struct LowcapiC
    return result;
 }
 
+
+int lc_getme_linefunc(int linenumber, struct CsvLine * line, void * state)
+{
+   struct MeResponse * me = (struct MeResponse *)state;
+
+   if(line->fieldcount < 2) error("CSV failure: me output missing fields!");
+
+   log_debug("Me result: uid=%s, username=%s", line->fields[0], line->fields[1]);
+   me->userid = atoi(line->fields[0]);
+   sprintf(me->username, "%s", line->fields[1]);
+
+   return 0;
+}
+
 struct MeResponse lc_getme(char * token, struct LowcapiConfig * config)
 {
    struct HttpRequest request;
@@ -279,14 +293,8 @@ struct MeResponse lc_getme(char * token, struct LowcapiConfig * config)
    }
    else
    {
-      //char ** parsed = parse_csv(text);
-      //if(!parsed) error("CSV failure: couldn't parse me output");
-      //if(!parsed[0]) error("CSV failure: me output missing uid");
-      //if(!parsed[1]) error("CSV failure: me output missing username");
-      //log_debug("Me result: uid=%s, username=%s", parsed[0], parsed[1]);
-      //me.userid = atoi(parsed[0]);
-      //sprintf(me.username, "%s", parsed[1]);
-      //free_csv_line(parsed);
+      if(csv_iteratelines_f(text, lc_getme_linefunc, &me))
+         error("Error while parsing me data");
    }
 
    return me;

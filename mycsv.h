@@ -5,6 +5,8 @@
 #define CSVERR_BADFILE 2
 #define CSVERR_BADPROGRAM 3
 
+#define CSV_EARLYSTOP 100
+
 struct CsvField
 {
    char * field;     //Set if field found, direct pointer to underlying data
@@ -57,7 +59,11 @@ struct CsvLine
    char ** fields;
    int fieldcount;
    int fieldscapacity;
+   char * nextline;
 };
+
+//Not yet...
+//void csv_freeline(struct CsvLine * line);
 
 //A slightly more basic function that iterates over lines, returning
 //each one to your processing function already processed and ready to go.

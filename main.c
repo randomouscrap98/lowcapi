@@ -75,9 +75,17 @@ int main(int argc, char * argv[])
 
    struct HttpResponse * response = lc_getapi(&request, NULL);
    log_debug("API Status response:\n%s", response->response);
+
+   if(!lc_responseok(response))
+   {
+      print_color(LCSCL_ERR, "Connection failed! [%ld]\n", response->status);
+      refresh();
+      goto prgend;
+   }
+
    print_color(LCSCL_OK, "Connection OK! [%ld]\n", response->status);
-   lc_freeresponse(response);
    refresh();
+   lc_freeresponse(response);
 
    char * token = lc_gettoken(&config);
 
@@ -107,6 +115,7 @@ int main(int argc, char * argv[])
    printw("Logged in as %s (%ld)!\n", me.username, me.userid);
    refresh();
 
+prgend:
    log_info("Program end");
    printw("Program end\n");
    refresh();
