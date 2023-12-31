@@ -29,6 +29,24 @@ static void error(char * fmt, ...)
    exit(1);
 }
 
+// C is so... mmmm sometimes
+void lc_makesearch(char * string, size_t maxlen)
+{
+   size_t oldlen = strlen(string);
+   size_t newlen = oldlen + 2;
+
+   if(newlen > maxlen - 1)
+      newlen = maxlen - 1;
+
+   //Luckily, we know the very end has at least a 0 so...
+   for(int i = oldlen; i > 0; i--)
+      string[i] = string[i - 1];
+
+   string[0] = '%';
+   string[newlen] = 0;
+   string[newlen - 1] = '%';
+}
+
 void lc_curlinit()
 {
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
@@ -130,7 +148,7 @@ struct HttpResponse * lc_curl_setupcallback(CURL * curl, char * url)
 
    size_t urllen = sizeof(char) * (strlen(url) + 1);
    response->length = 0;
-   response->response = NULL;
+   response->response = calloc(1, 1);
    response->status = 0;
    response->url = malloc(urllen);
 
@@ -233,7 +251,7 @@ struct HttpResponse * lc_getapi(struct HttpRequest * request, struct RequestValu
    }
 
    if(!result->response)
-      LCFAIL(request->fail_critical, "Failed to fetch response data for %s endpoint", request->endpoint);
+      error("Program error: no response set!!");
 
    return result;
 }
@@ -293,8 +311,18 @@ struct MeResponse lc_getme(char * token, struct LowcapiConfig * config)
    }
    else
    {
-      if(csv_iteratelines_f(text, lc_getme_linefunc, &me))
-         error("Error while parsing me data");
+      struct CsvLineCursor cursor = csv_initcursor_f(text);
+      while(csv_readline(&cursor))
+      {
+         if(cursor.error)
+            error("Error while parsing me data: %d", cursor.error);
+
+         if(cursor.line->fieldcount < 2) error("CSV failure: me output missing fields!");
+
+         log_debug("Me result: uid=%s, username=%s", cursor.line->fields[0], cursor.line->fields[1]);
+         me.userid = atoi(cursor.line->fields[0]);
+         sprintf(me.username, "%s", cursor.line->fields[1]);
+      }
    }
 
    return me;

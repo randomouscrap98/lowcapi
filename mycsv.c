@@ -221,24 +221,6 @@ struct CsvAnalysis csv_analyze(char * begin, char * end)
 }
 
 
-//// Clean up a csv line for the next line iteration (internal)
-//static void csv_resetline(struct CsvLine * line, int freeouter)
-//{
-//   if(line->fields)
-//   {
-//      for(int i = 0; i < line->fieldcount; i++)
-//         free(line->fields[i]);
-//
-//      if(freeouter)
-//      {
-//         free(line->fields);
-//         line->fields = NULL;
-//         line->fieldscapacity = 0;
-//      }
-//   }
-//
-//   line->fieldcount = 0;
-//}
 
 void csv_freeline(struct CsvLine * line)
 {
@@ -256,85 +238,6 @@ void csv_freeline(struct CsvLine * line)
    }
 }
 
-////Holder for line data as the line thing iterates.
-//struct CsvLineWrapper
-//{
-//   struct CsvLine line;
-//   int linenumber;
-//   int totalfields;
-//   void * userstate;
-//   int (*linefunc)(int, struct CsvLine *, void *);
-//};
-
-//static int csv_fixcapacity(struct CsvLine * line)
-//{
-//   //Need to increase size again (should only happen once or twice over the entire file)
-//   if(line->fieldscapacity <= line->fieldcount)
-//   {
-//      size_t newcap = line->fieldscapacity + CSV_FIELDSALLOC;
-//      line->fields = realloc(line->fields, sizeof(char *) * newcap);
-//      if(!line->fields) return CSVERR_BADPROGRAM; //Halt immediately
-//      line->fieldscapacity = newcap;
-//   }
-//   return 0;
-//}
-
-//// Complex field iterator function which converts field iteration into line
-//// iteration. Fields are unescaped and copied out of the csv
-//static int csv_iteratelines_func(int fieldnum, struct CsvField * field, void * state)
-//{
-//   struct CsvLineWrapper * wrapper = (struct CsvLineWrapper *)state;
-//   struct CsvLine * line = &wrapper->line;
-//
-//   //Start of a new line, call with the previous line data
-//   if(fieldnum == 0)
-//   {
-//      if(wrapper->totalfields)
-//         wrapper->linefunc(wrapper->linenumber++, line, wrapper->userstate);
-//      csv_resetline(line, 0); //This resets the fieldcount, also 0 so fields array isn't freed
-//   }
-//
-//   int error = csv_fixcapacity(line);
-//   if(error) return error;
-//
-//   //"unescape" the field and put it in the array. This mallocs a new string
-//   //but it's cleaned up anytime the line is dumped to your function
-//   line->fields[line->fieldcount++] = csv_unescapefield(field);
-//
-//   wrapper->totalfields++;
-//
-//   return 0;
-//}
-//
-//// Wrapper for csv_iteratefunc which iterates over lines instead of fields. 
-//// If you need access to the actual csv data, this is far easier to use, as it
-//// gives structured, ready to use data. Basically like a row cursor in a database
-//int csv_iteratelines(char * begin, char * end, 
-//      int (*linefunc)(int, struct CsvLine *, void *), 
-//      void * state)
-//{
-//   struct CsvLineWrapper wrapper = {
-//      { NULL, 0, 0 }, 0, 0, state, linefunc
-//   };
-//
-//   //Iterate over every field. Also at the end, you have to call the line
-//   //function for the very last line, since it won't be called during iteration
-//   int error = csv_iteratefunc(begin, end, csv_iteratelines_func, &wrapper);
-//   if(!error) linefunc(wrapper.linenumber, &wrapper.line, state);
-//
-//   //Just always get rid of leftover data (and free the actual fields array)
-//   csv_resetline(&wrapper.line, 1);
-//
-//   return error;
-//}
-//
-//// Wrapper for the common case of the csv being entirely in memory
-//inline int csv_iteratelines_f(char * csv, int (*linefunc)(int, struct CsvLine *, void *), void * state)
-//{
-//   return csv_iteratelines(csv, csv + strlen(csv) - 1, linefunc, state);
-//}
-
-
 struct CsvLineCursor csv_initcursor(char * begin, char * end)
 {
    struct CsvLineCursor cursor = { -1, 0, NULL, begin, end };
@@ -345,6 +248,7 @@ inline struct CsvLineCursor csv_initcursor_f(char * csv)
 {
    return csv_initcursor(csv, csv + strlen(csv) - 1);
 }
+
 
 #define __MYCSV_EXITREADLINE(rerr) { cursor->error = rerr; csv_freeline(cursor->line); return NULL; }
 

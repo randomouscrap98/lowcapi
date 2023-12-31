@@ -11,10 +11,10 @@
 #endif
 
 //Deps
-//#include "csv.h"
 #include "log.h"
 
 //Our own crap
+#include "mycsv.h"
 #include "config.h"
 #include "api.h"
 #include "screen.h"
@@ -74,22 +74,54 @@ long roomsearch(struct LowcapiConfig * config)
       struct RequestValue * values = NULL;
 
       if(roomid)
+      {
          values = lc_addvalue(NULL, "id", roomname);
+      }
       else
+      {
+         lc_makesearch(roomname, SMALLINPUTLEN);
          values = lc_addvalue(NULL, "search", roomname);
+      }
 
       char * output;
 
       if(lc_consumeresponse(lc_getapi(&request, values), &output))
       {
+         lc_freeallvalues(values, NULL);
          //Need to parse the lines and output each one.
+         struct CsvLineCursor cursor = csv_initcursor_f(output);
+         int count = 0;
+         while(csv_readline(&cursor))
+         {
+            if(cursor.line->fieldcount <= LCKEY_CONTENTID) {
+               print_color(LCSCL_ERR, "Bad format returned from search endpoint");
+               refresh();
+               csv_freeline(cursor.line); //Since we're exiting, need to get rid of line
+               free(output);
+               return 0;
+            }
+            if(roomid && atoi(cursor.line->fields[LCKEY_CONTENTID]) == roomid)
+               printw("Selecting room %s: '%s'\n", cursor.line->fields[LCKEY_CONTENTID], cursor.line->fields[LCKEY_CONTENTNAME]);
+            else
+               printw(" %6s - %s\n", cursor.line->fields[LCKEY_CONTENTID], cursor.line->fields[LCKEY_CONTENTNAME]);
+            count++;
+         }
+
+         if(count == 0) {
+            print_color(LCSCL_WARN, "No results found\n");
+            roomid = 0;
+         }
+
+         refresh();
+
+         free(output);
       }
       else
       {
+         lc_freeallvalues(values, NULL);
          print_color(LCSCL_ERR, "Search error: %s\n", output ? output : "UNKNOWN");
+         free(output);
       }
-
-      lc_freeallvalues(values);
    }
 
    return roomid;

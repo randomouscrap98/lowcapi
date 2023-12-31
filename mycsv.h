@@ -64,17 +64,6 @@ struct CsvLine
 // Frees a dynamically created line entirely, including the line itself
 void csv_freeline(struct CsvLine * line);
 
-////A slightly more basic function that iterates over lines, returning
-////each one to your processing function already processed and ready to go.
-////Note that you NEED to copy out any data you want to preserve from the 
-////line data, as it is destroyed every iteration
-//int csv_iteratelines(char * begin, char * end, 
-//      int (*linefunc)(int, struct CsvLine *, void *), 
-//      void * state);
-//int csv_iteratelines_f(char * csv,
-//      int (*linefunc)(int, struct CsvLine *, void *), 
-//      void * state);
-
 struct CsvLineCursor
 {
    int linenumber;

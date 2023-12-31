@@ -12,6 +12,18 @@
 #define LC_USERNAMEMAX 50
 #define LC_TOKENMAXLENGTH 256
 
+#define LCKEY_CONTENTNAME 0
+#define LCKEY_MSGUSER 1
+#define LCKEY_MSG 2
+#define LCKEY_MSGDATE 3
+#define LCKEY_MSGMODULE 4
+#define LCKEY_CONTENTSTATE 5
+#define LCKEY_CONTENTID 6
+#define LCKEY_MSGUID 7
+#define LCKEY_CONTENTMSGID 8
+
+void lc_makesearch(char * string, size_t maxlen);
+
 struct RequestValue
 {
    char * key;
