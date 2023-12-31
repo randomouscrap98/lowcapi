@@ -49,16 +49,15 @@ struct CsvAnalysis
 
 struct CsvAnalysis csv_analyze(char * begin, char * end);
 
+// This is a representation of internal data passed to your line function.
+// If you want anything out of it, you should COPY it, since the lifetimes
+// of any pointer are not guaranteed after the call to your function.
 struct CsvLine
 {
    char ** fields;
    int fieldcount;
    int fieldscapacity;
 };
-
-// Free internal memory for csvline but do not free the line itself.
-// Also reset important fields
-void csv_resetline(struct CsvLine * line);
 
 //A slightly more basic function that iterates over lines, returning
 //each one to your processing function already processed and ready to go.
