@@ -1,5 +1,5 @@
-#ifndef LC_HEADER_MYCSV
-#define LC_HEADER_MYCSV
+#ifndef __LC_HEADER_MYCSV__
+#define __LC_HEADER_MYCSV__
 
 #define CSVERR_BADFIELD 1
 #define CSVERR_BADFILE 2
@@ -15,5 +15,6 @@ struct CsvField
 };
 
 struct CsvField csv_parsefield(char * begin, char * end);
+char * csv_unescapefield(struct CsvField * field);
 
 #endif

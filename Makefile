@@ -3,9 +3,9 @@
 # days to go searching and remembering how to do all this
 
 # log.c - https://github.com/rxi/log.c
-# csv.c - https://github.com/semitrivial/csv_parser
 # toml.c - https://github.com/cktan/tomlc99/tree/master
 # pdcurses - https://github.com/wmcbrine/PDCurses
+# curl - https://github.com/curl/curl
 
 CC = gcc
 CFLAGS_common = -Wall -Ideps
@@ -13,7 +13,7 @@ LDFLAGS = -lncurses -lcurl
 PRG = lowcapi
 
 # -- The actual part you may need to modify if you add stuff --
-BASEDEPS = config.c api.c screen.c deps/toml.c deps/csv.c deps/log.c
+BASEDEPS = config.c api.c screen.c mycsv.c deps/toml.c deps/log.c
 SRCS = main.c $(BASEDEPS)
 
 ifeq ($(CSYS),windows)
