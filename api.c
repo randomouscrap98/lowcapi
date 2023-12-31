@@ -57,11 +57,13 @@ struct RequestValue * lc_addvalue(struct RequestValue * head, char * key, char *
 }
 
 //Recursively delete the entire value structure
-void lc_freeallvalues(struct RequestValue * head)
+void lc_freeallvalues(struct RequestValue * head, void (*finalize)(struct RequestValue *))
 {
    if(head)
    {
       lc_freeallvalues(head->next);
+      if(finalize)
+         finalize(head);
       free(head);
    }
 }
@@ -70,58 +72,43 @@ char * lc_constructurl(struct HttpRequest * request, struct RequestValue * value
 {
    //Create the initial URL, which is the api url plus the request url plus
    //some extra crap. The returned url may be quite large
-   size_t baselen = strlen(request->config->api) + strlen(request->endpoint) + 2;
-   char * url = malloc(sizeof(char) * (baselen + 1));
-   if(!url)
-      error("Couldn't allocate url string");
-   snprintf(url, baselen + 1, "%s/%s?", request->config->api, request->endpoint);
+   size_t basesize = strlen(request->config->api) + strlen(request->endpoint) + 2;
+   char * url = malloc(sizeof(char) * basesize);
+   if(!url) error("Couldn't allocate url string");
+   snprintf(url, basesize, "%s/%s", request->config->api, request->endpoint);
 
    //Here is where you'd do your value appending
+   CURL * curlconv = curl_easy_init(); 
+   if(!curlconv) error("Could not make curl object for query param conversion!");
 
-   return url;
-}
-
-// Return a CURL object pointing to the given url with GET, which you need to cleanup
-// (the curl object, not the url)
-CURL * lc_curlget_api(struct HttpRequest * request, struct RequestValue * values)
-{
-   CURL * curl = curl_easy_init(); 
-   if(!curl)
-      error("Couldn't make curl object to %s", url);
-
-   struct curl_slist *headers = NULL;
-
-   if(request->token)
+   for(struct RequestValues * this = values; this; this = this->next)
    {
-      const char * prepend = "Authorization: Bearer ";
-      size_t bearermaxlen = LC_TOKENMAXLENGTH + strlen(prepend);
-      char * bearer = malloc(sizeof(char) * (bearermaxlen + 1));
-      if(!bearer)
-         error("Couldn't allocate memory for token header!");
-      snprintf(bearer, bearermaxlen, "%s%s", prepend, request->token);
-      headers = curl_slist_append(headers, bearer);
+      char * param = curl_easy_escape(curlconv, this->value, strlen(this->value));
+      if(!param) error("Couldn't allocate escaped url parameter!");
+      // Make a new url that can hold the old one, the key and the value, 
+      // the &, the =, and the \0
+      size_t oldlen = strlen(url);
+      size_t newsize = oldlen + strlen(this->key) + strlen(param) + 3;
+      url = realloc(url, sizeof(char) * newsize);
+      if(!url) error("Couldn't allocate larger url for new parameter");
+      sprintf(url + oldlen, "%c%s=%s", this == values ? '?' : '&', this->key, param);
+      curl_free(param);
    }
 
-   if(headers)
-      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+   curl_easy_cleanup(curlconv);
 
-   char * url = lc_constructurl(request, values);
-   curl_easy_setopt(curl, CURLOPT_URL, url);
-   curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
-   free(url);
-
-   return curl;
+   return url;
 }
 
 // Taken from https://stackoverflow.com/a/2329792. 
 // For each chunk reported by curl, increase the response's size and append the
 // data to it. 
-size_t lc_curl_writecallback(void *contents, size_t size, size_t nmemb, struct HttpResponse * r) {
+size_t lc_curl_writecallback(void *contents, size_t size, size_t nmemb, struct HttpResponse * r) 
+{
    size_t conlen = size * nmemb;
    size_t new_len = r->length + conlen; //Length is always just strlen, not + \0
    r->response = realloc(r->response, new_len+1);
-   if (!r->response)
-      error("Could not (re)allocate response with new data chunk!");
+   if (!r->response) error("Could not (re)allocate response with new data chunk!");
    memcpy(r->response + r->length, contents, conlen);
    r->response[new_len] = '\0';
    r->length = new_len;
@@ -131,9 +118,7 @@ size_t lc_curl_writecallback(void *contents, size_t size, size_t nmemb, struct H
 struct HttpResponse * lc_curl_setupcallback(CURL * curl, char * url)
 {
    struct HttpResponse * response = malloc(sizeof(struct HttpResponse));
-
-   if(!response)
-      error("Could not allocate initial response!");
+   if(!response) error("Could not allocate initial response!");
 
    size_t urllen = sizeof(char) * (strlen(url) + 1);
    response->length = 0;
@@ -142,8 +127,7 @@ struct HttpResponse * lc_curl_setupcallback(CURL * curl, char * url)
    response->url = malloc(urllen);
 
    //NOTE: don't need to cleanup stuff since we're using the hard "error" (I think)
-   if(!response->url)
-      error("Could not allocate initial response (url malloc)!");
+   if(!response->url) error("Could not allocate initial response (url malloc)!");
 
    memcpy(response->url, url, urllen);
 
@@ -187,27 +171,53 @@ int lc_consumeresponse(struct HttpResponse * response, char ** output)
    }
 
    if(lc_responseok(response))
-   {
       result = 1;
-   }
 
    lc_freeresponse(response);
 
    return result;
 }
 
-struct HttpResponse * lc_getany(struct HttpRequest * request, struct RequestValue * values)
+struct HttpResponse * lc_getapi(struct HttpRequest * request, struct RequestValue * values)
 {
-   //Setup the request, including allocating the initial result object to fill later
-   CURL * curl = lc_curlget_api(endpoint, config);
-   struct HttpResponse * result = lc_curl_setupcallback(curl, endpoint);
+   //Setup the curl request
+   struct curl_slist * headers = NULL;
+   CURL * curl = curl_easy_init(); 
+
+   if(!curl) error("Couldn't make curl object to %s", url);
+
+   //Add the token if it exists
+   if(request->token)
+   {
+      const char * prepend = "Authorization: Bearer ";
+      size_t bearersize = strlen(request->token) + strlen(prepend) + 1;
+      char * bearer = malloc(sizeof(char) * bearermaxlen);
+      if(!bearer)
+         error("Couldn't allocate memory for token header!");
+      snprintf(bearer, bearersize, "%s%s", prepend, request->token);
+      headers = curl_slist_append(headers, bearer);
+      free(bearer);
+   }
+
+   if(headers)
+      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+   //Setup the url
+   char * url = lc_constructurl(request, values);
+   curl_easy_setopt(curl, CURLOPT_URL, url);
+   curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
+   log_trace("CURL GET: %s", url); //This can expose passwords in the log file!
+   free(url);
+
+   //Setup the callbacks, this produces the eventual response
+   struct HttpResponse * result = lc_curl_setupcallback(curl, request->endpoint);
 
    //Actually make the request, which fills the result object. Also set the status
    CURLcode statusres = curl_easy_perform(curl);
    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &result->status);
 
    curl_easy_cleanup(curl);
-   log_debug("CURL GET: %s", endpoint); //This can expose passwords in the log file!
+   if(headers) curl_slist_free_all(headers);
 
    if(statusres != CURLE_OK)
    {
@@ -221,46 +231,25 @@ struct HttpResponse * lc_getany(struct HttpRequest * request, struct RequestValu
    return result;
 }
 
-struct HttpResponse * lc_login(char * username, char * password, struct LowcapiConfig * config, int fail_critical)
+struct HttpResponse * lc_login(char * username, char * password, struct LowcapiConfig * config)
 {
-   char url[LCAPI_URLMAXLENGTH]; //Is this enough? Usernames can only be 30 or so
+   struct HttpRequest request;
+   sprintf(request.endpoint, "small/Login");
+   request.endpoint;
+   request.config = config;
+   request.token = NULL;
+   request.fail_critical = 0;
 
-   CURL * curlconv = curl_easy_init(); 
+   struct RequestValue * values;
+   char expire[16];
 
-   if(!curlconv)
-   {
-      LCFAIL(fail_critical, "Could not make curl object!");
-      return NULL;
-   }
+   sprintf(expire, "%d", config->tokenexpireseconds);
 
-   //Have to escape the username and password
-   char * usernew = curl_easy_escape(curlconv, username, strlen(username));
-   char * passnew = curl_easy_escape(curlconv, password, strlen(password));
+   values = lc_addvalue(values, "username", username);
+   values = lc_addvalue(values, "password", password);
+   values = lc_addvalue(values, "expireSeconds", expire);
 
-   curl_easy_cleanup(curlconv);
-
-   //Only construct a string if they both escaped
-   if(usernew && passnew)
-   {
-      snprintf(url, LCAPI_URLMAXLENGTH, "small/Login?username=%s&password=%s&expireSeconds=%d", 
-            usernew, passnew, config->tokenexpireseconds);
-   }
-   else
-   {
-      url[0] = 0;
-   }
-
-   //Free the unneeded new stuff (we already constructed the url)
-   if(usernew) curl_free(usernew);
-   if(passnew) curl_free(passnew);
-
-   if(url[0])
-   {
-      return lc_getany(url, config, fail_critical);
-   }
-   else
-   {
-      LCFAIL(fail_critical, "Curl escape failed!");
-      return NULL;
-   }
+   struct HttpResonse * result = lc_getapi(request, values);
+   lc_freeallvalues(values, NULL);
+   return result;
 }

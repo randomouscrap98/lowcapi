@@ -35,7 +35,7 @@ void newlogin(struct LowcapiConfig * config)
       printw("\nLogging in...\n");
       refresh();
       char * output = NULL;
-      if(lc_consumeresponse(lc_login(username, password, config, 0), &output))
+      if(lc_consumeresponse(lc_login(username, password, config), &output))
       {
          print_color(LCSCL_OK, "Token received, writing to file\n");
          lc_storetoken(config, output);
@@ -69,7 +69,13 @@ int main(int argc, char * argv[])
    refresh();
 
    //Make an initial request to the status endpoint
-   struct HttpResponse * response = lc_getany("status", &config, 1);
+   struct HttpRequest request;
+   request.fail_critical = 1;
+   request.config = &config;
+   request.token = NULL;
+   sprintf(request.endpoint, "status");
+
+   struct HttpResponse * response = lc_getapi(request, NULL);
    log_debug("API Status response:\n%s\n", response->response);
    print_color(LCSCL_OK, "Connection OK! [%ld]\n", response->status);
    lc_freeresponse(response);

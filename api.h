@@ -20,7 +20,7 @@ struct RequestValue
 };
 
 struct RequestValue * lc_addvalue(struct RequestValue * head, char * key, char * value);
-void lc_freeallvalues(struct RequestValue * head);
+void lc_freeallvalues(struct RequestValue * head, void (*finalize)(struct RequestValue *));
 
 // This is a rather large struct, but you can reuse it if you want.
 // This is designed so it doesn't need freeing, at the cost of memory.
@@ -57,7 +57,7 @@ int lc_consumeresponse(struct HttpResponse * response, char ** output);
 void lc_curlinit();
 
 //This first function can handle all simple "get" requests on the api (JUST the api)
-struct HttpResponse * lc_getany(struct HttpRequest * request, struct RequestValue * values);
+struct HttpResponse * lc_getapi(struct HttpRequest * request, struct RequestValue * values);
 
 //These are highly specialized functions that only require a bare minimum but
 //assume you DON'T want them to immediately fail on request failure
