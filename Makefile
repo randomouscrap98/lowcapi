@@ -60,4 +60,4 @@ $(PRG): $(OBJS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f $(PRG) $(OBJS) testcsv
+	rm -f $(PRG) $(OBJS) testcsv csvtest/test.o
