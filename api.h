@@ -34,6 +34,8 @@ struct HttpRequest
    //separately for the required requests. Some may not even need it
 };
 
+void lc_initrequest(struct HttpRequest * request, const char * endpoint, struct LowcapiConfig * config);
+
 // Responses can be any size. As such, all of this struct is designed
 // for dynamic memory.
 struct HttpResponse
@@ -44,15 +46,15 @@ struct HttpResponse
    long status;
 };
 
+int lc_responseok(struct HttpResponse * response);
+void lc_freeresponse(struct HttpResponse * response);
+int lc_consumeresponse(struct HttpResponse * response, char ** output);
+
 struct MeResponse
 {
    char username[LC_USERNAMEMAX + 1];
    long userid;
 };
-
-int lc_responseok(struct HttpResponse * response);
-void lc_freeresponse(struct HttpResponse * response);
-int lc_consumeresponse(struct HttpResponse * response, char ** output);
 
 void lc_curlinit();
 

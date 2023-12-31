@@ -6,6 +6,7 @@
 #include "api.h"
 #include "config.h"
 #include "log.h"
+#include "csv.h"
 
 
 #define LCFAIL(fc, ...) { if(fc) { error(__VA_ARGS__); } else { log_error(__VA_ARGS__); } }
@@ -45,8 +46,7 @@ void lc_curlinit()
 struct RequestValue * lc_addvalue(struct RequestValue * head, char * key, char * value)
 {
    struct RequestValue * this = malloc(sizeof(struct RequestValue));
-   if(!this)
-      error("Couldn't allocate memory for request value!");
+   if(!this) error("Couldn't allocate memory for request value!");
    this->key = key;
    this->value = value;
    this->next = head;
@@ -66,6 +66,14 @@ void lc_freeallvalues(struct RequestValue * head, void (*finalize)(struct Reques
          finalize(head);
       free(head);
    }
+}
+
+void lc_initrequest(struct HttpRequest * request, const char * endpoint, struct LowcapiConfig * config)
+{
+   sprintf(request->endpoint, "%s", endpoint);
+   request->config = config;
+   request->token[0] = 0;
+   request->fail_critical = 0;
 }
 
 char * lc_constructurl(struct HttpRequest * request, struct RequestValue * values)
@@ -163,7 +171,7 @@ int lc_consumeresponse(struct HttpResponse * response, char ** output)
    int result = 0;
    log_info("[%ld] - %s", response->status, response->url);
 
-   //Always copy the response, it might have something valuable (like an error string)
+   //Always move the response, it might have something valuable (like an error string)
    if(response->response)
    {
       *output = response->response;
@@ -192,8 +200,7 @@ struct HttpResponse * lc_getapi(struct HttpRequest * request, struct RequestValu
       const char * prepend = "Authorization: Bearer ";
       size_t bearersize = strlen(request->token) + strlen(prepend) + 1;
       char * bearer = malloc(sizeof(char) * bearersize);
-      if(!bearer)
-         error("Couldn't allocate memory for token header!");
+      if(!bearer) error("Couldn't allocate memory for token header!");
       snprintf(bearer, bearersize, "%s%s", prepend, request->token);
       headers = curl_slist_append(headers, bearer);
       free(bearer);
@@ -234,10 +241,7 @@ struct HttpResponse * lc_getapi(struct HttpRequest * request, struct RequestValu
 struct HttpResponse * lc_login(char * username, char * password, struct LowcapiConfig * config)
 {
    struct HttpRequest request;
-   sprintf(request.endpoint, "small/Login");
-   request.config = config;
-   request.token[0] = 0;
-   request.fail_critical = 0;
+   lc_initrequest(&request, "small/Login", config);
 
    struct RequestValue * values = NULL;
    char expire[16];
@@ -251,4 +255,39 @@ struct HttpResponse * lc_login(char * username, char * password, struct LowcapiC
    struct HttpResponse * result = lc_getapi(&request, values);
    lc_freeallvalues(values, NULL);
    return result;
+}
+
+struct MeResponse lc_getme(char * token, struct LowcapiConfig * config)
+{
+   struct HttpRequest request;
+   lc_initrequest(&request, "small/Me", config);
+   sprintf(request.token, "%s", token);
+
+   struct HttpResponse * result = lc_getapi(&request, NULL);
+   char * text = NULL;
+
+   struct MeResponse me;
+   me.userid = 0;
+   me.username[0] = 0;
+
+   if(!lc_consumeresponse(result, &text))
+   {
+      if(text)
+         log_error("Error with small/Me: %s", text);
+      else
+         log_error("Error with small/Me: UNKNOWN");
+   }
+   else
+   {
+      char ** parsed = parse_csv(text);
+      if(!parsed) error("CSV failure: couldn't parse me output");
+      if(!parsed[0]) error("CSV failure: me output missing uid");
+      if(!parsed[1]) error("CSV failure: me output missing username");
+      log_debug("Me result: uid=%s, username=%s", parsed[0], parsed[1]);
+      me.userid = atoi(parsed[0]);
+      sprintf(me.username, "%s", parsed[1]);
+      free_csv_line(parsed);
+   }
+
+   return me;
 }

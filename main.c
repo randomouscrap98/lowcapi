@@ -70,13 +70,11 @@ int main(int argc, char * argv[])
 
    //Make an initial request to the status endpoint
    struct HttpRequest request;
+   lc_initrequest(&request, "status", &config);
    request.fail_critical = 1;
-   request.config = &config;
-   request.token[0] = 0;
-   sprintf(request.endpoint, "status");
 
    struct HttpResponse * response = lc_getapi(&request, NULL);
-   log_debug("API Status response:\n%s\n", response->response);
+   log_debug("API Status response:\n%s", response->response);
    print_color(LCSCL_OK, "Connection OK! [%ld]\n", response->status);
    lc_freeresponse(response);
    refresh();
@@ -92,6 +90,22 @@ int main(int argc, char * argv[])
    }
 
    printw("Token file found, testing login...\n");
+   refresh();
+
+   struct MeResponse me = lc_getme(token, &config);
+
+   while(!me.userid)
+   {
+      print_color(LCSCL_WARN, "Token file invalid, please login again\n");
+      refresh();
+      newlogin(&config);
+      free(token); //Free the old token
+      token = lc_gettoken(&config);
+      me = lc_getme(token, &config);
+   }
+
+   printw("Logged in as %s (%ld)!\n", me.username, me.userid);
+   refresh();
 
    log_info("Program end");
    printw("Program end\n");
