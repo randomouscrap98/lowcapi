@@ -3,6 +3,7 @@ ignore/
 *.so
 token
 lowcapi
+testcsv
 lowcapi_win.exe
 a.out
 a.exe

@@ -193,7 +193,7 @@ struct CsvAnalysis csv_analyze(char * begin, char * end)
    struct CsvAnalysis analysis = { 0 };
    analysis.smallestfieldlength = INT_MAX;
 
-   csv_iteratefunc(begin, end, csv_analyzefunc, &analysis);
+   analysis.error = csv_iteratefunc(begin, end, csv_analyzefunc, &analysis);
 
    return analysis;
 }

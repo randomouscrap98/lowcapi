@@ -23,6 +23,7 @@ int csv_iteratefunc(char * begin, char * end,
 
 struct CsvAnalysis
 {
+   int error;
    int lines;
    int columns;
    int totalfields;

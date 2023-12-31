@@ -47,9 +47,11 @@ char * loadfile(const char * filename)
    return buffer;
 }
 
-struct CsvAnalysis analyze(char * filecontents)
+struct CsvAnalysis analyze(char * filecontents, int error)
 {
-   return csv_analyze(filecontents, filecontents + strlen(filecontents) - 1);
+   struct CsvAnalysis analysis = csv_analyze(filecontents, filecontents + strlen(filecontents) - 1);
+   assert(error == analysis.error);
+   return analysis;
 }
 
 int main(int argc, char * argv[])
@@ -66,7 +68,7 @@ int main(int argc, char * argv[])
 
    //The first arg is where the files are
    char * simple1 = loadfile("simple1.csv");
-   struct CsvAnalysis analysis = analyze(simple1);
+   struct CsvAnalysis analysis = analyze(simple1, 1);
 
    printf("Yeah: %d\n", analysis.lines);
 }
