@@ -61,7 +61,7 @@ void lc_freeallvalues(struct RequestValue * head, void (*finalize)(struct Reques
 {
    if(head)
    {
-      lc_freeallvalues(head->next);
+      lc_freeallvalues(head->next, finalize);
       if(finalize)
          finalize(head);
       free(head);
@@ -81,7 +81,7 @@ char * lc_constructurl(struct HttpRequest * request, struct RequestValue * value
    CURL * curlconv = curl_easy_init(); 
    if(!curlconv) error("Could not make curl object for query param conversion!");
 
-   for(struct RequestValues * this = values; this; this = this->next)
+   for(struct RequestValue * this = values; this; this = this->next)
    {
       char * param = curl_easy_escape(curlconv, this->value, strlen(this->value));
       if(!param) error("Couldn't allocate escaped url parameter!");
@@ -184,14 +184,14 @@ struct HttpResponse * lc_getapi(struct HttpRequest * request, struct RequestValu
    struct curl_slist * headers = NULL;
    CURL * curl = curl_easy_init(); 
 
-   if(!curl) error("Couldn't make curl object to %s", url);
+   if(!curl) error("Couldn't make curl object to %s", request->endpoint);
 
    //Add the token if it exists
-   if(request->token)
+   if(strlen(request->token))
    {
       const char * prepend = "Authorization: Bearer ";
       size_t bearersize = strlen(request->token) + strlen(prepend) + 1;
-      char * bearer = malloc(sizeof(char) * bearermaxlen);
+      char * bearer = malloc(sizeof(char) * bearersize);
       if(!bearer)
          error("Couldn't allocate memory for token header!");
       snprintf(bearer, bearersize, "%s%s", prepend, request->token);
@@ -222,11 +222,11 @@ struct HttpResponse * lc_getapi(struct HttpRequest * request, struct RequestValu
    if(statusres != CURLE_OK)
    {
       const char * cerr = curl_easy_strerror(statusres);
-      LCFAIL(fail_critical, "Couldn't get '%s' endpoint - %s", endpoint, cerr);
+      LCFAIL(request->fail_critical, "Couldn't get '%s' endpoint - %s", request->endpoint, cerr);
    }
 
    if(!result->response)
-      LCFAIL(fail_critical, "Failed to fetch response data for %s endpoint", endpoint);
+      LCFAIL(request->fail_critical, "Failed to fetch response data for %s endpoint", request->endpoint);
 
    return result;
 }
@@ -235,12 +235,11 @@ struct HttpResponse * lc_login(char * username, char * password, struct LowcapiC
 {
    struct HttpRequest request;
    sprintf(request.endpoint, "small/Login");
-   request.endpoint;
    request.config = config;
-   request.token = NULL;
+   request.token[0] = 0;
    request.fail_critical = 0;
 
-   struct RequestValue * values;
+   struct RequestValue * values = NULL;
    char expire[16];
 
    sprintf(expire, "%d", config->tokenexpireseconds);
@@ -249,7 +248,7 @@ struct HttpResponse * lc_login(char * username, char * password, struct LowcapiC
    values = lc_addvalue(values, "password", password);
    values = lc_addvalue(values, "expireSeconds", expire);
 
-   struct HttpResonse * result = lc_getapi(request, values);
+   struct HttpResponse * result = lc_getapi(&request, values);
    lc_freeallvalues(values, NULL);
    return result;
 }

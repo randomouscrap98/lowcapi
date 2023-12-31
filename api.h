@@ -26,7 +26,7 @@ void lc_freeallvalues(struct RequestValue * head, void (*finalize)(struct Reques
 // This is designed so it doesn't need freeing, at the cost of memory.
 struct HttpRequest
 {
-   char endpoint[LCAPI_ENDPOINTMAXLENGTH + 1];
+   char endpoint[LC_ENDPOINTMAXLENGTH + 1];
    struct LowcapiConfig * config;
    char token[LC_TOKENMAXLENGTH + 1];
    int fail_critical;

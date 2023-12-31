@@ -72,10 +72,10 @@ int main(int argc, char * argv[])
    struct HttpRequest request;
    request.fail_critical = 1;
    request.config = &config;
-   request.token = NULL;
+   request.token[0] = 0;
    sprintf(request.endpoint, "status");
 
-   struct HttpResponse * response = lc_getapi(request, NULL);
+   struct HttpResponse * response = lc_getapi(&request, NULL);
    log_debug("API Status response:\n%s\n", response->response);
    print_color(LCSCL_OK, "Connection OK! [%ld]\n", response->status);
    lc_freeresponse(response);
