@@ -112,6 +112,8 @@ char * csv_unescapefield(struct CsvField * field)
             if(field->field[i] == CSV_FIELDDELIM)
                i++;
          }
+
+         *next = 0;
       }
       else
       {
@@ -227,6 +229,7 @@ struct CsvLineWrapper
 {
    struct CsvLine line;
    int linenumber;
+   int totalfields;
    void * userstate;
    int (*linefunc)(int, struct CsvLine *, void *);
 };
@@ -239,9 +242,8 @@ static int csv_iteratelines_func(int fieldnum, struct CsvField * field, void * s
    //Start of a new line, call with the previous line data
    if(fieldnum == 0)
    {
-      if(wrapper->linenumber)
-         wrapper->linefunc(wrapper->linenumber, line, wrapper->userstate);
-      wrapper->linenumber++;
+      if(wrapper->totalfields)
+         wrapper->linefunc(wrapper->linenumber++, line, wrapper->userstate);
       csv_resetline(line);
    }
 
@@ -256,8 +258,9 @@ static int csv_iteratelines_func(int fieldnum, struct CsvField * field, void * s
 
    //"unescape" the field and put it in the array. This mallocs a new string
    //but it's cleaned up anytime the wrapper 
-   line->fields[line->fieldcount] = csv_unescapefield(field);
-   line->fieldcount++;
+   line->fields[line->fieldcount++] = csv_unescapefield(field);
+
+   wrapper->totalfields++;
 
    return 0;
 }
@@ -267,8 +270,7 @@ int csv_iteratelines(char * begin, char * end,
       void * state)
 {
    struct CsvLineWrapper wrapper = {
-      { NULL, 0, 0 },
-      0, state, linefunc
+      { NULL, 0, 0 }, 0, 0, state, linefunc
    };
 
    //Iterate over every field. Also at the end, you have to call the line

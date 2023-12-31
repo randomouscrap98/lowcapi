@@ -69,6 +69,7 @@ struct CsvAnalysis analyze(char * filecontents, int error)
 
 int testescape1(int linenumber, struct CsvLine * line, void * state)
 {
+   printf("%d: %s, %s, %s\n", linenumber, line->fields[0], line->fields[1], line->fields[2]);
    assert(linenumber >= 0 && linenumber < 3);
    assert(line->fieldcount == 3);
    assert(line->fieldscapacity > 3);
@@ -81,7 +82,15 @@ int testescape1(int linenumber, struct CsvLine * line, void * state)
    }
    else if(linenumber == 1)
    {
-
+      assert(strcmp(line->fields[0], "this") == 0);
+      assert(strcmp(line->fields[1], "that") == 0);
+      assert(strcmp(line->fields[2], "the other") == 0);
+   }
+   else if(linenumber == 2)
+   {
+      assert(strcmp(line->fields[0], "9") == 0);
+      assert(strcmp(line->fields[1], "8") == 0);
+      assert(strcmp(line->fields[2], "7") == 0);
    }
 
    return 0;
