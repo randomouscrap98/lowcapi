@@ -6,7 +6,7 @@
 #include "api.h"
 #include "config.h"
 #include "log.h"
-#include "csv.h"
+#include "mycsv.h"
 
 
 #define LCFAIL(fc, ...) { if(fc) { error(__VA_ARGS__); } else { log_error(__VA_ARGS__); } }
@@ -279,14 +279,14 @@ struct MeResponse lc_getme(char * token, struct LowcapiConfig * config)
    }
    else
    {
-      char ** parsed = parse_csv(text);
-      if(!parsed) error("CSV failure: couldn't parse me output");
-      if(!parsed[0]) error("CSV failure: me output missing uid");
-      if(!parsed[1]) error("CSV failure: me output missing username");
-      log_debug("Me result: uid=%s, username=%s", parsed[0], parsed[1]);
-      me.userid = atoi(parsed[0]);
-      sprintf(me.username, "%s", parsed[1]);
-      free_csv_line(parsed);
+      //char ** parsed = parse_csv(text);
+      //if(!parsed) error("CSV failure: couldn't parse me output");
+      //if(!parsed[0]) error("CSV failure: me output missing uid");
+      //if(!parsed[1]) error("CSV failure: me output missing username");
+      //log_debug("Me result: uid=%s, username=%s", parsed[0], parsed[1]);
+      //me.userid = atoi(parsed[0]);
+      //sprintf(me.username, "%s", parsed[1]);
+      //free_csv_line(parsed);
    }
 
    return me;

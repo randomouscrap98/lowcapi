@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "mycsv.h"
 
@@ -39,13 +40,16 @@ struct CsvField csv_parsefield(char * begin, char * end)
          field.field = ++begin;
 
          //Do a special scan to find the end
-         for(begin; begin < end; begin++)
+         for(; begin < end; begin++)
          {
             //This may be the end of the field
             if(begin[0] == CSV_ENCLOSE) 
             {
                //This is NOT the end of a field, it's an escaped delimiter
-               if(begin[1] == CSV_ENCLOSE) { begin++; }
+               if(begin[1] == CSV_ENCLOSE) { 
+                  field.rawlen++;
+                  begin++; 
+               }
                //This IS the end of a field. Since we're here, we need to
                //figure out what's going on
                else {
@@ -63,7 +67,7 @@ struct CsvField csv_parsefield(char * begin, char * end)
          //Even if the field is empty, this should still work.
          field.field = begin;
 
-         for(begin; begin < end; begin++)
+         for(; begin < end; begin++)
          {
             if(csv_findend(begin, end, &field))
                break;
@@ -99,7 +103,12 @@ char * csv_unescapefield(struct CsvField * field)
 
          for(int i = 0; i < field->rawlen; i++)
          {
+            *next = field->field[i];
+            next++;
 
+            //Assume the field is escaped properly (for speed)
+            if(field->field[i] == CSV_FIELDDELIM)
+               i++;
          }
       }
       else
@@ -110,4 +119,81 @@ char * csv_unescapefield(struct CsvField * field)
    }
 
    return result;
+}
+
+int csv_iteratefunc(char * begin, char * end, 
+      int (*fieldfunc)(int, struct CsvField *, void *), 
+      void * state)
+{
+   int fieldnum = 0;
+   char * next = begin;
+
+   while(next < end)
+   {
+      struct CsvField field = csv_parsefield(next, end);
+
+      if(field.error)
+         return field.error;
+
+      if(fieldfunc)
+      {
+         int result = fieldfunc(fieldnum, &field, state);
+         if(result) return result;
+      }
+
+      if(field.nextline)
+      {
+         next = field.nextline;
+         fieldnum = 0;
+      }
+      else if(field.nextfield)
+      {
+         next = field.nextfield;
+         fieldnum++;
+      }
+      else
+      {
+         return CSVERR_BADPROGRAM;
+      }
+   }
+
+   return 0;
+}
+
+// An example per-field function.
+static int csv_analyzefunc(int fieldnum, struct CsvField * field, void * state)
+{
+   struct CsvAnalysis * analysis = (struct CsvAnalysis *)state;
+
+   analysis->totalfields++;
+   analysis->totalfieldlength += field->rawlen;
+
+   if(fieldnum == 0)
+      analysis->lines++;
+
+   if(analysis->lines == 1)
+      analysis->columns = fieldnum + 1;
+
+   if(field->escaped)
+      analysis->escapedfields++;
+
+   if(!field->rawlen)
+      analysis->emptyfields++;
+   else if(field->rawlen < analysis->smallestfieldlength)
+      analysis->smallestfieldlength = field->rawlen;
+
+   if(field->rawlen > analysis->largestfieldlength)
+      analysis->largestfieldlength = field->rawlen;
+
+   return 0;
+}
+
+struct CsvAnalysis csv_analyze(char * begin, char * end)
+{
+   struct CsvAnalysis analysis = { 0 };
+   analysis.smallestfieldlength = INT_MAX;
+
+   csv_iteratefunc(begin, end, csv_analyzefunc, &analysis);
+
+   return analysis;
 }
