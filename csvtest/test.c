@@ -56,6 +56,7 @@ struct CsvAnalysis analyze(char * filecontents, int error)
 
 int main(int argc, char * argv[])
 {
+   //The first arg is where the files are
    if(argc > 1)
    {
       basepath = argv[1];
@@ -66,9 +67,16 @@ int main(int argc, char * argv[])
       exit(1);
    }
 
-   //The first arg is where the files are
    char * simple1 = loadfile("simple1.csv");
-   struct CsvAnalysis analysis = analyze(simple1, 1);
+   struct CsvAnalysis analysis = analyze(simple1, 0);
+   assert(analysis.lines == 3);
+   assert(analysis.columns == 3);
+   assert(analysis.totalfields == 9);
+   assert(analysis.emptyfields == 0);
+   assert(analysis.escapedfields == 0);
+   assert(analysis.largestfieldlength == 8);
+   assert(analysis.smallestfieldlength == 1);
+   assert(analysis.totalfieldlength == 24);
 
-   printf("Yeah: %d\n", analysis.lines);
+   printf("All pass\n");
 }
