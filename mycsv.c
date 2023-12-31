@@ -7,6 +7,8 @@
 #define CSV_FIELDDELIM ','
 #define CSV_ENCLOSE '"'
 
+#define CSV_FIELDSALLOC 10
+
 // NOTE: this implementation parses SPECIFICALLY the rfc csv files.
 // Sorry Europe... https://datatracker.ietf.org/doc/html/rfc4180
 
@@ -160,6 +162,11 @@ int csv_iteratefunc(char * begin, char * end,
    return 0;
 }
 
+int csv_iteratefunc_f(char * csv, int (*fieldfunc)(int, struct CsvField *, void *), void * state)
+{
+   return csv_iteratefunc(csv, csv + strlen(csv) - 1, fieldfunc, state);
+}
+
 // An example per-field function.
 static int csv_analyzefunc(int fieldnum, struct CsvField * field, void * state)
 {
@@ -196,4 +203,86 @@ struct CsvAnalysis csv_analyze(char * begin, char * end)
    analysis.error = csv_iteratefunc(begin, end, csv_analyzefunc, &analysis);
 
    return analysis;
+}
+
+
+void csv_resetline(struct CsvLine * line)
+{
+   if(line->fields)
+   {
+      for(int i = 0; i < line->fieldcount; i++)
+         free(line->fields[i]);
+
+      free(line->fields);
+      line->fields = NULL;
+   }
+
+   //Just in case you want to reuse it or something. The line itself isn't freed
+   line->fieldcount = 0;
+   line->fieldscapacity = 0;
+}
+
+//Holder for line data as the line thing iterates.
+struct CsvLineWrapper
+{
+   struct CsvLine line;
+   int linenumber;
+   void * userstate;
+   int (*linefunc)(int, struct CsvLine *, void *);
+};
+
+static int csv_iteratelines_func(int fieldnum, struct CsvField * field, void * state)
+{
+   struct CsvLineWrapper * wrapper = (struct CsvLineWrapper *)state;
+   struct CsvLine * line = &wrapper->line;
+
+   //Start of a new line, call with the previous line data
+   if(fieldnum == 0)
+   {
+      if(wrapper->linenumber)
+         wrapper->linefunc(wrapper->linenumber, line, wrapper->userstate);
+      wrapper->linenumber++;
+      csv_resetline(line);
+   }
+
+   //Need to increase size again
+   if(line->fieldscapacity <= line->fieldcount)
+   {
+      size_t newcap = line->fieldscapacity + CSV_FIELDSALLOC;
+      line->fields = realloc(line->fields, sizeof(char *) * newcap);
+      if(!line->fields) return CSVERR_BADPROGRAM; //Halt immediately
+      line->fieldscapacity = newcap;
+   }
+
+   //"unescape" the field and put it in the array. This mallocs a new string
+   //but it's cleaned up anytime the wrapper 
+   line->fields[line->fieldcount] = csv_unescapefield(field);
+   line->fieldcount++;
+
+   return 0;
+}
+
+int csv_iteratelines(char * begin, char * end, 
+      int (*linefunc)(int, struct CsvLine *, void *), 
+      void * state)
+{
+   struct CsvLineWrapper wrapper = {
+      { NULL, 0, 0 },
+      0, state, linefunc
+   };
+
+   //Iterate over every field. Also at the end, you have to call the line
+   //function for the very last line, since it won't be called during iteration
+   int error = csv_iteratefunc(begin, end, csv_iteratelines_func, &wrapper);
+   if(!error) linefunc(wrapper.linenumber, &wrapper.line, state);
+
+   //Just always get rid of leftover data
+   csv_resetline(&wrapper.line);
+
+   return error;
+}
+
+int csv_iteratelines_f(char * csv, int (*linefunc)(int, struct CsvLine *, void *), void * state)
+{
+   return csv_iteratelines(csv, csv + strlen(csv) - 1, linefunc, state);
 }

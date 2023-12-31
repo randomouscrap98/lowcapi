@@ -15,9 +15,22 @@ struct CsvField
    char * nextline;  //Pointer to next line, if this field ends at a line
 };
 
+//Parse the next field within the given range (both inclusive)
 struct CsvField csv_parsefield(char * begin, char * end);
+
+//Copy the parsed field into a malloc'd string, unescaping everything
 char * csv_unescapefield(struct CsvField * field);
+
+//The main csv processing function. Call the given fieldfunc for every field
+//in the given range (both inclusive). Your given state will be passed to
+//each call. You can determine a line start by first param = 0 in fieldfunc
 int csv_iteratefunc(char * begin, char * end, 
+      int (*fieldfunc)(int, struct CsvField *, void *), 
+      void * state);
+
+//Basic wrapper for common instance where the entire csv is in memory in 
+//a standard null-terminated string
+int csv_iteratefunc_f(char * csv,
       int (*fieldfunc)(int, struct CsvField *, void *), 
       void * state);
 
@@ -35,5 +48,27 @@ struct CsvAnalysis
 };
 
 struct CsvAnalysis csv_analyze(char * begin, char * end);
+
+struct CsvLine
+{
+   char ** fields;
+   int fieldcount;
+   int fieldscapacity;
+};
+
+// Free internal memory for csvline but do not free the line itself.
+// Also reset important fields
+void csv_resetline(struct CsvLine * line);
+
+//A slightly more basic function that iterates over lines, returning
+//each one to your processing function already processed and ready to go.
+//Note that you NEED to copy out any data you want to preserve from the 
+//line data, as it is destroyed every iteration
+int csv_iteratelines(char * begin, char * end, 
+      int (*linefunc)(int, struct CsvLine *, void *), 
+      void * state);
+int csv_iteratelines_f(char * csv,
+      int (*linefunc)(int, struct CsvLine *, void *), 
+      void * state);
 
 #endif

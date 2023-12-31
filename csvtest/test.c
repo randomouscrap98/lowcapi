@@ -5,7 +5,7 @@
 #include <string.h>
 
 //#define PRINTFILES
-#define PRINTANALYSIS
+//#define PRINTANALYSIS
 
 char * basepath;
 
@@ -65,6 +65,26 @@ struct CsvAnalysis analyze(char * filecontents, int error)
    printf("-----------------------------\n");
 #endif
    return analysis;
+}
+
+int testescape1(int linenumber, struct CsvLine * line, void * state)
+{
+   assert(linenumber >= 0 && linenumber < 3);
+   assert(line->fieldcount == 3);
+   assert(line->fieldscapacity > 3);
+
+   if(linenumber == 0)
+   {
+      assert(strcmp(line->fields[0], "a") == 0);
+      assert(strcmp(line->fields[1], "b") == 0);
+      assert(strcmp(line->fields[2], "c") == 0);
+   }
+   else if(linenumber == 1)
+   {
+
+   }
+
+   return 0;
 }
 
 int main(int argc, char * argv[])
@@ -146,6 +166,13 @@ int main(int argc, char * argv[])
 
    file = loadfile("badescape1.csv");
    analysis = analyze(file, CSVERR_BADFIELD);
+   free(file);
+
+   // --------------------------------------
+   //  and now we test just the line thing
+   // --------------------------------------
+   file = loadfile("escape1.csv");
+   assert(csv_iteratelines_f(file, testescape1, NULL) == 0);
    free(file);
 
    printf("All pass\n");
