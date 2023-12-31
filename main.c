@@ -19,19 +19,19 @@
 #include "api.h"
 #include "screen.h"
 
+#define SMALLINPUTLEN 100
 
 // Ask user for new login info. Writes login info to token file.
 void newlogin(struct LowcapiConfig * config)
 {
-   const int inputlength = 100;
-   char username[inputlength];
-   char password[inputlength];
+   char username[SMALLINPUTLEN];
+   char password[SMALLINPUTLEN];
 
    while(1) {
       printw("Username: ");
-      lc_getinput_simple(username, inputlength);
+      lc_getinput_simple(username, SMALLINPUTLEN);
       printw("\nPassword: ");
-      lc_getpass_simple(password, inputlength);
+      lc_getpass_simple(password, SMALLINPUTLEN);
       printw("\nLogging in...\n");
       refresh();
       char * output = NULL;
@@ -54,6 +54,75 @@ void newlogin(struct LowcapiConfig * config)
    }
 }
 
+long roomsearch(struct LowcapiConfig * config)
+{
+   long roomid = 0;
+   char roomname[SMALLINPUTLEN];
+
+   struct HttpRequest request;
+   lc_initrequest(&request, "small/search", config);
+
+   while(!roomid)
+   {
+      printw("Search for a room or enter an ID: ");
+      refresh();
+      lc_getinput_simple(roomname, SMALLINPUTLEN);
+      printw("\n");
+      refresh();
+
+      roomid = atoi(roomname);
+      struct RequestValue * values = NULL;
+
+      if(roomid)
+         values = lc_addvalue(NULL, "id", roomname);
+      else
+         values = lc_addvalue(NULL, "search", roomname);
+
+      char * output;
+
+      if(lc_consumeresponse(lc_getapi(&request, values), &output))
+      {
+         //Need to parse the lines and output each one.
+      }
+      else
+      {
+         print_color(LCSCL_ERR, "Search error: %s\n", output ? output : "UNKNOWN");
+      }
+
+      lc_freeallvalues(values);
+   }
+
+   return roomid;
+}
+
+int checkconnection(struct LowcapiConfig * config)
+{
+   printw("Checking connection to %s...\n", config->api);
+   refresh();
+
+   //Make an initial request to the status endpoint
+   struct HttpRequest request;
+   lc_initrequest(&request, "status", config);
+   request.fail_critical = 1;
+
+   struct HttpResponse * response = lc_getapi(&request, NULL);
+   log_debug("API Status response:\n%s", response->response);
+
+   int result = lc_responseok(response);
+   if(result) { print_color(LCSCL_OK, "Connection OK! [%ld]\n", response->status); }
+   else { print_color(LCSCL_ERR, "Connection failed! [%ld]\n", response->status); }
+   refresh();
+
+   lc_freeresponse(response);
+
+   return result;
+}
+
+
+// ----------------------------
+//       Main                  
+// ----------------------------
+
 int main(int argc, char * argv[])
 {
    struct LowcapiConfig config = lc_read_config(argc > 1 ? argv[1] : NULL);
@@ -65,57 +134,39 @@ int main(int argc, char * argv[])
    lc_curlinit();
    lc_setup_screen();
 
-   printw("Checking connection to %s...\n", config.api);
-   refresh();
-
-   //Make an initial request to the status endpoint
-   struct HttpRequest request;
-   lc_initrequest(&request, "status", &config);
-   request.fail_critical = 1;
-
-   struct HttpResponse * response = lc_getapi(&request, NULL);
-   log_debug("API Status response:\n%s", response->response);
-
-   if(!lc_responseok(response))
+   if(checkconnection(&config))
    {
-      print_color(LCSCL_ERR, "Connection failed! [%ld]\n", response->status);
+      char * token = lc_gettoken(&config);
+
+      while(!token)
+      {
+         print_color(LCSCL_WARN, "No token file found, please login\n");
+         refresh();
+         newlogin(&config);
+         token = lc_gettoken(&config);
+      }
+
+      printw("Token file found, testing login...\n");
       refresh();
-      goto prgend;
+
+      struct MeResponse me = lc_getme(token, &config);
+
+      while(!me.userid)
+      {
+         print_color(LCSCL_WARN, "Token file invalid, please login again\n");
+         refresh();
+         newlogin(&config);
+         free(token); //Free the old token
+         token = lc_gettoken(&config);
+         me = lc_getme(token, &config);
+      }
+
+      printw("Logged in as %s (%ld)!\n", me.username, me.userid);
+      refresh();
+
+      long roomid = roomsearch(&config);
    }
 
-   print_color(LCSCL_OK, "Connection OK! [%ld]\n", response->status);
-   refresh();
-   lc_freeresponse(response);
-
-   char * token = lc_gettoken(&config);
-
-   while(!token)
-   {
-      print_color(LCSCL_WARN, "No token file found, please login\n");
-      refresh();
-      newlogin(&config);
-      token = lc_gettoken(&config);
-   }
-
-   printw("Token file found, testing login...\n");
-   refresh();
-
-   struct MeResponse me = lc_getme(token, &config);
-
-   while(!me.userid)
-   {
-      print_color(LCSCL_WARN, "Token file invalid, please login again\n");
-      refresh();
-      newlogin(&config);
-      free(token); //Free the old token
-      token = lc_gettoken(&config);
-      me = lc_getme(token, &config);
-   }
-
-   printw("Logged in as %s (%ld)!\n", me.username, me.userid);
-   refresh();
-
-prgend:
    log_info("Program end");
    printw("Program end\n");
    refresh();

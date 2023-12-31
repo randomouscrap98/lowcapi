@@ -67,34 +67,34 @@ struct CsvAnalysis analyze(char * filecontents, int error)
    return analysis;
 }
 
-int testescape1(int linenumber, struct CsvLine * line, void * state)
-{
-   printf("%d: %s, %s, %s\n", linenumber, line->fields[0], line->fields[1], line->fields[2]);
-   assert(linenumber >= 0 && linenumber < 3);
-   assert(line->fieldcount == 3);
-   assert(line->fieldscapacity > 3);
-
-   if(linenumber == 0)
-   {
-      assert(strcmp(line->fields[0], "a") == 0);
-      assert(strcmp(line->fields[1], "b") == 0);
-      assert(strcmp(line->fields[2], "c") == 0);
-   }
-   else if(linenumber == 1)
-   {
-      assert(strcmp(line->fields[0], "this") == 0);
-      assert(strcmp(line->fields[1], "that") == 0);
-      assert(strcmp(line->fields[2], "the other") == 0);
-   }
-   else if(linenumber == 2)
-   {
-      assert(strcmp(line->fields[0], "9") == 0);
-      assert(strcmp(line->fields[1], "8") == 0);
-      assert(strcmp(line->fields[2], "7") == 0);
-   }
-
-   return 0;
-}
+//int testescape1(int linenumber, struct CsvLine * line, void * state)
+//{
+//   printf("%d: %s, %s, %s\n", linenumber, line->fields[0], line->fields[1], line->fields[2]);
+//   assert(linenumber >= 0 && linenumber < 3);
+//   assert(line->fieldcount == 3);
+//   assert(line->fieldscapacity > 3);
+//
+//   if(linenumber == 0)
+//   {
+//      assert(strcmp(line->fields[0], "a") == 0);
+//      assert(strcmp(line->fields[1], "b") == 0);
+//      assert(strcmp(line->fields[2], "c") == 0);
+//   }
+//   else if(linenumber == 1)
+//   {
+//      assert(strcmp(line->fields[0], "this") == 0);
+//      assert(strcmp(line->fields[1], "that") == 0);
+//      assert(strcmp(line->fields[2], "the other") == 0);
+//   }
+//   else if(linenumber == 2)
+//   {
+//      assert(strcmp(line->fields[0], "9") == 0);
+//      assert(strcmp(line->fields[1], "8") == 0);
+//      assert(strcmp(line->fields[2], "7") == 0);
+//   }
+//
+//   return 0;
+//}
 
 int main(int argc, char * argv[])
 {
@@ -181,8 +181,67 @@ int main(int argc, char * argv[])
    //  and now we test just the line thing
    // --------------------------------------
    file = loadfile("escape1.csv");
-   assert(csv_iteratelines_f(file, testescape1, NULL) == 0);
+   struct CsvLineCursor cursor = csv_initcursor_f(file);
+   while(csv_readline(&cursor))
+   {
+      struct CsvLine * line = cursor.line; 
+      printf("%d: %s, %s, %s\n", cursor.linenumber, line->fields[0], line->fields[1], line->fields[2]);
+
+      assert(cursor.linenumber >= 0 && cursor.linenumber < 3);
+      assert(line->fieldcount == 3);
+      assert(line->fieldscapacity > 3);
+
+      if(cursor.linenumber == 0)
+      {
+         assert(strcmp(line->fields[0], "a") == 0);
+         assert(strcmp(line->fields[1], "b") == 0);
+         assert(strcmp(line->fields[2], "c") == 0);
+      }
+      else if(cursor.linenumber == 1)
+      {
+         assert(strcmp(line->fields[0], "this") == 0);
+         assert(strcmp(line->fields[1], "that") == 0);
+         assert(strcmp(line->fields[2], "the other") == 0);
+      }
+      else if(cursor.linenumber == 2)
+      {
+         assert(strcmp(line->fields[0], "9") == 0);
+         assert(strcmp(line->fields[1], "8") == 0);
+         assert(strcmp(line->fields[2], "7") == 0);
+      }
+   }
+
+   //assert(csv_iteratelines_f(file, testescape1, NULL) == 0);
    free(file);
+
+//int testescape1(int linenumber, struct CsvLine * line, void * state)
+//{
+//   printf("%d: %s, %s, %s\n", linenumber, line->fields[0], line->fields[1], line->fields[2]);
+//   assert(linenumber >= 0 && linenumber < 3);
+//   assert(line->fieldcount == 3);
+//   assert(line->fieldscapacity > 3);
+//
+//   if(linenumber == 0)
+//   {
+//      assert(strcmp(line->fields[0], "a") == 0);
+//      assert(strcmp(line->fields[1], "b") == 0);
+//      assert(strcmp(line->fields[2], "c") == 0);
+//   }
+//   else if(linenumber == 1)
+//   {
+//      assert(strcmp(line->fields[0], "this") == 0);
+//      assert(strcmp(line->fields[1], "that") == 0);
+//      assert(strcmp(line->fields[2], "the other") == 0);
+//   }
+//   else if(linenumber == 2)
+//   {
+//      assert(strcmp(line->fields[0], "9") == 0);
+//      assert(strcmp(line->fields[1], "8") == 0);
+//      assert(strcmp(line->fields[2], "7") == 0);
+//   }
+//
+//   return 0;
+//}
 
    printf("All pass\n");
 }
