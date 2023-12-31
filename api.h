@@ -3,6 +3,7 @@
 
 #include <curl/curl.h>
 #include "config.h"
+#include "mycsv.h"
 
 // In our system, all values are added as query parameters. We specially
 // separate those to make life "easier" (maybe). As such, the baseline
@@ -21,6 +22,8 @@
 #define LCKEY_CONTENTID 6
 #define LCKEY_MSGUID 7
 #define LCKEY_CONTENTMSGID 8
+
+#define LC_CONTENTFIELDS 9
 
 void lc_makesearch(char * string, size_t maxlen);
 
@@ -78,4 +81,5 @@ struct HttpResponse * lc_getapi(struct HttpRequest * request, struct RequestValu
 struct HttpResponse * lc_login(char * username, char * password, struct LowcapiConfig * config);
 struct MeResponse lc_getme(char * token, struct LowcapiConfig * config);
 
+int lc_verifycontent(struct CsvLineCursor * cursor);
 #endif

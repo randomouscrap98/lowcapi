@@ -47,6 +47,16 @@ void lc_makesearch(char * string, size_t maxlen)
    string[newlen - 1] = '%';
 }
 
+int lc_verifycontent(struct CsvLineCursor * cursor)
+{
+   if(cursor->line->fieldcount < LC_CONTENTFIELDS) {
+      log_error("Bad format returned from search endpoint");
+      csv_endcursor(cursor);
+      return 0;
+   }
+   return 1;
+}
+
 void lc_curlinit()
 {
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
@@ -275,19 +285,6 @@ struct HttpResponse * lc_login(char * username, char * password, struct LowcapiC
    return result;
 }
 
-
-int lc_getme_linefunc(int linenumber, struct CsvLine * line, void * state)
-{
-   struct MeResponse * me = (struct MeResponse *)state;
-
-   if(line->fieldcount < 2) error("CSV failure: me output missing fields!");
-
-   log_debug("Me result: uid=%s, username=%s", line->fields[0], line->fields[1]);
-   me->userid = atoi(line->fields[0]);
-   sprintf(me->username, "%s", line->fields[1]);
-
-   return 0;
-}
 
 struct MeResponse lc_getme(char * token, struct LowcapiConfig * config)
 {

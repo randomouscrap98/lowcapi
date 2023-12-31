@@ -157,25 +157,25 @@ int main(int argc, char * argv[])
    while(csv_readline(&cursor))
    {
       struct CsvLine * line = cursor.line; 
-      printf("%d: %s, %s, %s\n", cursor.linenumber, line->fields[0], line->fields[1], line->fields[2]);
+      printf("%d: %s, %s, %s\n", cursor.linecount, line->fields[0], line->fields[1], line->fields[2]);
 
-      assert(cursor.linenumber >= 0 && cursor.linenumber < 3);
+      assert(cursor.linecount >= 1 && cursor.linecount <= 3);
       assert(line->fieldcount == 3);
       assert(line->fieldscapacity > 3);
 
-      if(cursor.linenumber == 0)
+      if(cursor.linecount == 1)
       {
          assert(strcmp(line->fields[0], "a") == 0);
          assert(strcmp(line->fields[1], "b") == 0);
          assert(strcmp(line->fields[2], "c") == 0);
       }
-      else if(cursor.linenumber == 1)
+      else if(cursor.linecount == 2)
       {
          assert(strcmp(line->fields[0], "this") == 0);
          assert(strcmp(line->fields[1], "that") == 0);
          assert(strcmp(line->fields[2], "the other") == 0);
       }
-      else if(cursor.linenumber == 2)
+      else if(cursor.linecount == 3)
       {
          assert(strcmp(line->fields[0], "9") == 0);
          assert(strcmp(line->fields[1], "8") == 0);

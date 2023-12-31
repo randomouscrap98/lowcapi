@@ -66,7 +66,7 @@ void csv_freeline(struct CsvLine * line);
 
 struct CsvLineCursor
 {
-   int linenumber;
+   int linecount;
    int error;
    struct CsvLine * line;
    char * current;
@@ -75,6 +75,7 @@ struct CsvLineCursor
 
 struct CsvLineCursor csv_initcursor(char * begin, char * end);
 struct CsvLineCursor csv_initcursor_f(char * csv);
+void csv_endcursor(struct CsvLineCursor * cursor);
 
 // Read each line using the given cursor. Will return NULL at end.
 struct CsvLine * csv_readline(struct CsvLineCursor * cursor);

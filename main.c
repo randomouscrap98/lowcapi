@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <curl/curl.h>
+#include <string.h>
 
 //You're SUPPOSED to be able to use just curses.h on any system and it'll be
 //portable, but in practice it just doesn't work like that... blegh
@@ -21,6 +22,25 @@
 
 #define SMALLINPUTLEN 100
 
+
+static void error(char * fmt, ...)
+{
+   va_list args;
+   va_start(args, fmt);
+
+   char prepend[] = "ERROR: ";
+   char * newfmt = malloc(strlen(prepend) + strlen(fmt) + 1);
+   if(newfmt) {
+      sprintf(newfmt, "%s%s", prepend, fmt);
+      vfprintf(stderr, newfmt, args);
+      free(newfmt);
+   }
+   else {
+      vfprintf(stderr, fmt, args);
+   }
+   exit(1);
+}
+
 // Ask user for new login info. Writes login info to token file.
 void newlogin(struct LowcapiConfig * config)
 {
@@ -28,12 +48,11 @@ void newlogin(struct LowcapiConfig * config)
    char password[SMALLINPUTLEN];
 
    while(1) {
-      printw("Username: ");
+      printw("Username: "); refresh();
       lc_getinput_simple(username, SMALLINPUTLEN);
-      printw("\nPassword: ");
+      printw("\nPassword: "); refresh();
       lc_getpass_simple(password, SMALLINPUTLEN);
-      printw("\nLogging in...\n");
-      refresh();
+      printw("\nLogging in...\n"); refresh();
       char * output = NULL;
       if(lc_consumeresponse(lc_login(username, password, config), &output))
       {
@@ -41,13 +60,9 @@ void newlogin(struct LowcapiConfig * config)
          lc_storetoken(config, output);
          break;
       }
-      else if(output)
+      else 
       {
-         print_color(LCSCL_WARN, "Error: %s\n", output);
-      }
-      else
-      {
-         print_color(LCSCL_WARN, "Error: UNKNOWN\n");
+         print_color(LCSCL_WARN, "Error: %s\n", output ? output : "UNKNOWN");
       }
       free(output); //Apparently it's safe to call free on null
       refresh();
@@ -58,12 +73,21 @@ long roomsearch(struct LowcapiConfig * config)
 {
    long roomid = 0;
    char roomname[SMALLINPUTLEN];
+   char * output = NULL;
+   struct RequestValue * values = NULL;
 
    struct HttpRequest request;
    lc_initrequest(&request, "small/search", config);
 
-   while(!roomid)
+   while(1)
    {
+      // Safety
+      free(output);
+      lc_freeallvalues(values, NULL);
+
+      // one exit
+      if(roomid) return roomid;
+
       printw("Search for a room or enter an ID: ");
       refresh();
       lc_getinput_simple(roomname, SMALLINPUTLEN);
@@ -71,7 +95,6 @@ long roomsearch(struct LowcapiConfig * config)
       refresh();
 
       roomid = atoi(roomname);
-      struct RequestValue * values = NULL;
 
       if(roomid)
       {
@@ -83,48 +106,33 @@ long roomsearch(struct LowcapiConfig * config)
          values = lc_addvalue(NULL, "search", roomname);
       }
 
-      char * output;
-
       if(lc_consumeresponse(lc_getapi(&request, values), &output))
       {
-         lc_freeallvalues(values, NULL);
          //Need to parse the lines and output each one.
          struct CsvLineCursor cursor = csv_initcursor_f(output);
-         int count = 0;
          while(csv_readline(&cursor))
          {
-            if(cursor.line->fieldcount <= LCKEY_CONTENTID) {
-               print_color(LCSCL_ERR, "Bad format returned from search endpoint");
-               refresh();
-               csv_freeline(cursor.line); //Since we're exiting, need to get rid of line
-               free(output);
-               return 0;
-            }
+            if(!lc_verifycontent(&cursor))
+               error("Bad format returned from search endpoint");
             if(roomid && atoi(cursor.line->fields[LCKEY_CONTENTID]) == roomid)
                printw("Selecting room %s: '%s'\n", cursor.line->fields[LCKEY_CONTENTID], cursor.line->fields[LCKEY_CONTENTNAME]);
             else
                printw(" %6s - %s\n", cursor.line->fields[LCKEY_CONTENTID], cursor.line->fields[LCKEY_CONTENTNAME]);
-            count++;
          }
 
-         if(count == 0) {
+         if(cursor.linecount == 0) {
             print_color(LCSCL_WARN, "No results found\n");
             roomid = 0;
          }
 
          refresh();
-
-         free(output);
       }
       else
       {
-         lc_freeallvalues(values, NULL);
          print_color(LCSCL_ERR, "Search error: %s\n", output ? output : "UNKNOWN");
-         free(output);
+         roomid = 0;
       }
    }
-
-   return roomid;
 }
 
 int checkconnection(struct LowcapiConfig * config)
@@ -166,38 +174,38 @@ int main(int argc, char * argv[])
    lc_curlinit();
    lc_setup_screen();
 
-   if(checkconnection(&config))
+   if(!checkconnection(&config))
+      error("Can't continue, cannot reach API at %s", config.api);
+
+   char * token = lc_gettoken(&config);
+
+   while(!token)
    {
-      char * token = lc_gettoken(&config);
-
-      while(!token)
-      {
-         print_color(LCSCL_WARN, "No token file found, please login\n");
-         refresh();
-         newlogin(&config);
-         token = lc_gettoken(&config);
-      }
-
-      printw("Token file found, testing login...\n");
+      print_color(LCSCL_WARN, "No token file found, please login\n");
       refresh();
-
-      struct MeResponse me = lc_getme(token, &config);
-
-      while(!me.userid)
-      {
-         print_color(LCSCL_WARN, "Token file invalid, please login again\n");
-         refresh();
-         newlogin(&config);
-         free(token); //Free the old token
-         token = lc_gettoken(&config);
-         me = lc_getme(token, &config);
-      }
-
-      printw("Logged in as %s (%ld)!\n", me.username, me.userid);
-      refresh();
-
-      long roomid = roomsearch(&config);
+      newlogin(&config);
+      token = lc_gettoken(&config);
    }
+
+   printw("Token file found, testing login...\n");
+   refresh();
+
+   struct MeResponse me = lc_getme(token, &config);
+
+   while(!me.userid)
+   {
+      print_color(LCSCL_WARN, "Token file invalid, please login again\n");
+      refresh();
+      newlogin(&config);
+      free(token); //Free the old token
+      token = lc_gettoken(&config);
+      me = lc_getme(token, &config);
+   }
+
+   printw("Logged in as %s (%ld)!\n", me.username, me.userid);
+   refresh();
+
+   long roomid = roomsearch(&config);
 
    log_info("Program end");
    printw("Program end\n");

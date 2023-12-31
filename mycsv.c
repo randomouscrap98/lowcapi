@@ -240,8 +240,14 @@ void csv_freeline(struct CsvLine * line)
 
 struct CsvLineCursor csv_initcursor(char * begin, char * end)
 {
-   struct CsvLineCursor cursor = { -1, 0, NULL, begin, end };
+   struct CsvLineCursor cursor = { 0, 0, NULL, begin, end };
    return cursor;
+}
+
+void csv_endcursor(struct CsvLineCursor * cursor)
+{
+   cursor->current = cursor->end;
+   csv_freeline(cursor->line);
 }
 
 inline struct CsvLineCursor csv_initcursor_f(char * csv)
@@ -294,7 +300,7 @@ struct CsvLine * csv_readline(struct CsvLineCursor * cursor)
       {
          // We're at the end of a line, set pointer and return current line
          cursor->current = field.nextline;
-         cursor->linenumber++;
+         cursor->linecount++;
          return cursor->line;
       }
       else if(field.nextfield)
