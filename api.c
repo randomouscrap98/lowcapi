@@ -322,5 +322,7 @@ struct MeResponse lc_getme(char * token, struct LowcapiConfig * config)
       }
    }
 
+   free(text);
+
    return me;
 }

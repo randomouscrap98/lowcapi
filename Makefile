@@ -9,7 +9,7 @@
 
 CC = gcc
 CFLAGS_common = -Wall -Ideps
-LDFLAGS = -lncurses -lcurl
+LDFLAGS = -lncursesw -lcurl
 PRG = lowcapi
 
 # -- The actual part you may need to modify if you add stuff --

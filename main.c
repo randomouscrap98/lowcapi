@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <curl/curl.h>
 #include <string.h>
+#include <locale.h>
 
 //You're SUPPOSED to be able to use just curses.h on any system and it'll be
 //portable, but in practice it just doesn't work like that... blegh
@@ -69,15 +70,15 @@ void newlogin(struct LowcapiConfig * config)
    }
 }
 
-long roomsearch(struct LowcapiConfig * config)
+long roomsearch(struct HttpRequest * request) 
 {
    long roomid = 0;
    char roomname[SMALLINPUTLEN];
    char * output = NULL;
    struct RequestValue * values = NULL;
 
-   struct HttpRequest request;
-   lc_initrequest(&request, "small/search", config);
+   // This is the endpoint we'll keep querying
+   sprintf(request->endpoint, "small/search");
 
    while(1)
    {
@@ -106,7 +107,7 @@ long roomsearch(struct LowcapiConfig * config)
          values = lc_addvalue(NULL, "search", roomname);
       }
 
-      if(lc_consumeresponse(lc_getapi(&request, values), &output))
+      if(lc_consumeresponse(lc_getapi(request, values), &output))
       {
          //Need to parse the lines and output each one.
          struct CsvLineCursor cursor = csv_initcursor_f(output);
@@ -165,6 +166,7 @@ int checkconnection(struct LowcapiConfig * config)
 
 int main(int argc, char * argv[])
 {
+   setlocale(LC_ALL, ""); //en_US.UTF-8");
    struct LowcapiConfig config = lc_read_config(argc > 1 ? argv[1] : NULL);
 
    lc_setup_logging(&config);
@@ -202,10 +204,18 @@ int main(int argc, char * argv[])
       me = lc_getme(token, &config);
    }
 
-   printw("Logged in as %s (%ld)!\n", me.username, me.userid);
+   print_color(LCSCL_OK, "Logged in as %s (%ld)!\n", me.username, me.userid);
    refresh();
 
-   long roomid = roomsearch(&config);
+   //This request will be reused for some stuff. it's meant to
+   struct HttpRequest request;
+   lc_initrequest(&request, "none", &config);
+   sprintf(request.token, "%s", token);
+
+   //Also, you can free the token. It's stored in the request
+   free(token);
+
+   long roomid = roomsearch(&request);
 
    log_info("Program end");
    printw("Program end\n");
