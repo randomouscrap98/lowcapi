@@ -23,6 +23,8 @@
 
 #define SMALLINPUTLEN 100
 
+//NOTE: not used right now
+const char lockSymbol[] = "\xF0\x9F\x94\x92";
 
 static void error(char * fmt, ...)
 {
@@ -59,13 +61,14 @@ void newlogin(struct LowcapiConfig * config)
       {
          print_color(LCSCL_OK, "Token received, writing to file\n");
          lc_storetoken(config, output);
+         free(output); 
          break;
       }
       else 
       {
          print_color(LCSCL_WARN, "Error: %s\n", output ? output : "UNKNOWN");
+         free(output); //Apparently it's safe to call free on null
       }
-      free(output); //Apparently it's safe to call free on null
       refresh();
    }
 }
@@ -113,12 +116,14 @@ long roomsearch(struct HttpRequest * request)
          struct CsvLineCursor cursor = csv_initcursor_f(output);
          while(csv_readline(&cursor))
          {
+            char ** fields = cursor.line->fields;
+
             if(!lc_verifycontent(&cursor))
                error("Bad format returned from search endpoint");
-            if(roomid && atoi(cursor.line->fields[LCKEY_CONTENTID]) == roomid)
-               printw("Selecting room %s: '%s'\n", cursor.line->fields[LCKEY_CONTENTID], cursor.line->fields[LCKEY_CONTENTNAME]);
+            if(roomid && atoi(fields[LCKEY_CONTENTID]) == roomid)
+               printw("Selecting room %s: '%s'\n", fields[LCKEY_CONTENTID], fields[LCKEY_CONTENTNAME]);
             else
-               printw(" %6s - %s\n", cursor.line->fields[LCKEY_CONTENTID], cursor.line->fields[LCKEY_CONTENTNAME]);
+               printw("%s %6s - %s\n", strchr(fields[LCKEY_CONTENTSTATE], 'R') ? " " : "P", fields[LCKEY_CONTENTID], fields[LCKEY_CONTENTNAME]);
          }
 
          if(cursor.linecount == 0) {
@@ -216,6 +221,8 @@ int main(int argc, char * argv[])
    free(token);
 
    long roomid = roomsearch(&request);
+
+   //Now with the room id, we can setup the basic chatroom. How will it work?
 
    log_info("Program end");
    printw("Program end\n");
