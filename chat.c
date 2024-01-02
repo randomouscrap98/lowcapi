@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <ctype.h>
+#include <curl/curl.h>
 
 #include "log.h"
 #include "chat.h"
@@ -61,6 +62,11 @@ void lc_runchat(struct HttpRequest * request, long roomid)
    char post[LC_MAXPOSTLEN + 1];
    int postpos = 0;
 
+   long mid = 0;
+
+   // Create the curl mulithandle
+   CURLM * multi_handle = curl_multi_init();
+
    // Create each of the windows
    WINDOW *msgwin, *spacerwin, *txtwin;
 
@@ -90,13 +96,9 @@ void lc_runchat(struct HttpRequest * request, long roomid)
          wprintw(msgwin, "Based: %s\n", post);
          wrefresh(msgwin);
       }
-
-      // Null-terminate the password string
-      //buffer[index] = '\0';
-
-      //wprintw(msgwin, "Hey: %d\n", i++);
-      //wrefresh(msgwin);
    }
+
+   curl_multi_cleanup(multi_handle);
 
    delwin(msgwin);
    delwin(txtwin);
