@@ -21,6 +21,39 @@ static void lc_updatespacer(WINDOW * win, char * title)
    wrefresh(win);
 }
 
+#define LC_SIMPLEWRAP(win, position) \
+{ int cwidth = getmaxx(win); wmove(win, (position) / cwidth, (position) % cwidth); }
+
+int lc_textboxinput(WINDOW * txtwin, int ch, char * buffer, int * position)
+{
+   if(ch != ERR)
+   {
+      if (ch == '\n') {
+         buffer[*position] = 0;
+         *position = 0;
+         wclear(txtwin);
+         return 1;
+      }
+      else if (ch == 127 && *position > 0) { //backspace
+         // Move backwards first, then use the new position to print 
+         *position = *position - 1;
+         LC_SIMPLEWRAP(txtwin, *position);
+         wprintw(txtwin, " ");
+         // Move the cursor back so the user doesn't know we deleted something
+         LC_SIMPLEWRAP(txtwin, *position);
+      } else if (isprint(ch) && *position < LC_MAXPOSTLEN) {
+         // Print at the CURRENT position
+         buffer[*position] = ch;
+         LC_SIMPLEWRAP(txtwin, *position);
+         wprintw(txtwin, "%c", ch);
+         // THEN move it forward
+         *position = *position + 1;
+      }
+      wrefresh(txtwin);
+   }
+   return 0;
+}
+
 void lc_runchat(struct HttpRequest * request, long roomid)
 {
    int cheight, cwidth;
@@ -52,34 +85,21 @@ void lc_runchat(struct HttpRequest * request, long roomid)
    while(1)
    {
       int ch = wgetch(txtwin);
-
-      if(ch != ERR)
+      if(lc_textboxinput(txtwin, ch, post, &postpos))
       {
-         char display = 0;
-         int opostpos = postpos;
-         // Handle backspace
-         if (ch == 127) {
-            if(postpos > 0) {
-               --postpos;
-               display = ' ';
-            }
-         } else if (isprint(ch) && postpos < LC_MAXPOSTLEN - 1) {
-            post[postpos++] = ch;
-            display = ch;
-         }
-         if(display)
-         {
-            int ty = postpos / cwidth, tx = postpos % cwidth;
-            mvwprintw(txtwin, ty, tx, "%c", display); 
-            if(opostpos > postpos) wmove(txtwin, ty, tx);
-         }
-         wrefresh(txtwin);
+         wprintw(msgwin, "Based: %s\n", post);
+         wrefresh(msgwin);
       }
 
       // Null-terminate the password string
       //buffer[index] = '\0';
 
-      wprintw(msgwin, "Hey: %d\n", i++);
-      wrefresh(msgwin);
+      //wprintw(msgwin, "Hey: %d\n", i++);
+      //wrefresh(msgwin);
    }
+
+   delwin(msgwin);
+   delwin(txtwin);
+   delwin(spacerwin);
+   refresh();
 }

@@ -4,6 +4,16 @@
 #include <string.h>
 #include <locale.h>
 
+//#include <signal.h>
+//if (signal(SIGWINCH, handle_winch) == SIG_ERR) {
+//    perror("Unable to set signal handler");
+//    return 1;
+//}
+//void handle_winch(int signo) {
+//    // Handle the window size change
+//    printf("Window size changed (SIGWINCH received)\n");
+//}
+
 //Deps
 #include "log.h"
 
