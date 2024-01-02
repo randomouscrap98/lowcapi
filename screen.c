@@ -5,14 +5,7 @@
 
 #include "screen.h"
 #include "log.h"
-
-//You're SUPPOSED to be able to use just curses.h on any system and it'll be
-//portable, but in practice it just doesn't work like that... blegh
-#ifdef BUILDWINDOWS
-#include <pdcurses.h>
-#else
-#include <ncurses.h>
-#endif
+#include "selectcurses.h"
 
 static void error(char * fmt, ...)
 {
@@ -55,6 +48,7 @@ void lc_setup_screen()
    init_pair(LCSCL_OK, COLOR_GREEN, COLOR_BLACK);
    init_pair(LCSCL_ERR, COLOR_RED, COLOR_BLACK);
    init_pair(LCSCL_WARN, COLOR_YELLOW, COLOR_BLACK);
+   init_pair(LCSCL_UI, COLOR_BLACK, COLOR_GREEN);
    log_debug("Setup screen!");
 }
 

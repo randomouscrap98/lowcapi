@@ -10,7 +10,8 @@
 enum {
    LCSCL_OK = 1,
    LCSCL_ERR,
-   LCSCL_WARN
+   LCSCL_WARN,
+   LCSCL_UI
 };
 
 void lc_setup_screen();

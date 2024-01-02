@@ -4,22 +4,16 @@
 #include <string.h>
 #include <locale.h>
 
-//You're SUPPOSED to be able to use just curses.h on any system and it'll be
-//portable, but in practice it just doesn't work like that... blegh
-#ifdef BUILDWINDOWS
-#include <pdcurses.h>
-#else
-#include <ncurses.h>
-#endif
-
 //Deps
 #include "log.h"
 
 //Our own crap
+#include "selectcurses.h"
 #include "mycsv.h"
 #include "config.h"
 #include "api.h"
 #include "screen.h"
+#include "chat.h"
 
 #define SMALLINPUTLEN 100
 
@@ -223,6 +217,7 @@ int main(int argc, char * argv[])
    long roomid = roomsearch(&request);
 
    //Now with the room id, we can setup the basic chatroom. How will it work?
+   lc_runchat(&request, roomid);
 
    log_info("Program end");
    printw("Program end\n");
