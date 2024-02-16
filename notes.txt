@@ -1,0 +1,26 @@
+simple program which acts like a POSIX thing
+
+CAPICHAT_TOKEN=$(capi-chat qcs./api auth)
+capi-chat qcs./api listen 000000
+capi-chat qcs./api send 
+# chat.txt
+
+source env
+while true; do
+	nano chat.txt
+   cat chat.txt > capi-chat qcs./api send
+	capi-chat qcs./api chat.txt
+done
+
+
+- various commands it can run, like auth, listen, send
+- basic wrapper around the small api
+- output the listen stuff directly
+- but couldn't the user do this with a bash script?
+  - Maybe it WOULD be better as a bash script
+
+- Maybe could simply provide an extremely basic 
+  example implementation for you as a bash script, 
+  let users write it themselves. After all, the 
+  "small" endpoint does nearly all of the work for you;
+
