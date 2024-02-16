@@ -14,7 +14,8 @@ PRG = lowcapi
 
 # -- The actual part you may need to modify if you add stuff --
 BASEDEPS = config.c api.c screen.c mycsv.c chat.c deps/toml.c deps/log.c
-SRCS = main.c $(BASEDEPS)
+WIDGETS = widget_log.c
+SRCS = main.c $(BASEDEPS) $(WIDGETS)
 
 ifeq ($(CSYS),windows)
     CFLAGS_common = -Wall -Ideps -IC:/msys64/mingw64/include -LC:/msys64/mingw64/lib -DBUILDWINDOWS

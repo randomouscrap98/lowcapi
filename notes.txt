@@ -1,0 +1,23 @@
+Could base the whole thing off widgets?
+- Each widget can create or listen to signals, like in Godot
+- Each widget can do networking on its own, but it should not have...
+  mmm it should not block on anything? So each one will need some way 
+  to register its curl stuff to the multi system. Perhaps that system should
+  also have a way to register the things you want to toss after connecting.
+  All the headers and junk. Possible if you wrap it all in some special
+  connection type (you already have one)
+- Widget can refresh itself, or should the caller refresh it? Only the 
+  widget knows when it needs to be refreshed, or should we just refresh it
+  every time? Perhaps the widget could just have a "process" function and each
+  widget can do what it needs to each frame?
+  - What about things that overlap each other? The order of drawing the widgets
+    is probably determined by the caller program, and i think the refresh 
+    HAS to happen in a certain order. 
+  - So... yeah, the widget needs to TELL the caller when they need to be
+    redrawn I guess, and then they need a redraw function. Well no, they can
+    all redraw themselves, since they're all separate buffers, and then the
+    caller can figure out when they need to call wnoutrefresh
+- So widgets have to redraw themselves but report to the caller when they need
+  to be refreshed globally. What about the network stuff? What about the input?
+  Do I pass the input into each widget? Probbbaaabllyyyy???
+  - 
