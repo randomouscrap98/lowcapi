@@ -19,14 +19,14 @@ read search
 
 # Only do the header if the user set the thing (it's not required)
 if [ -z "$CAPI_TOKEN" ]; then
-    AUTH_HEADER=""
+   AUTH_HEADER=""
 else
-    AUTH_HEADER="-H 'Authorization: Bearer $CAPI_TOKEN'"
+   AUTH_HEADER="Bearer $CAPI_TOKEN"
 fi
 
 # now the actual search! This uses python because apparently csv is 
 # "too fancy" of a format or whatever (no standard stuff for it)
-curl -s $AUTH_HEADER -G \
+curl -s -H "Authorization: $AUTH_HEADER" -G \
    --data-urlencode "search=%$search%" \
    "$CAPI_URL/small/search" | python3 -c '
 import csv

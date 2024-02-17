@@ -11,3 +11,4 @@ config.toml
 tags
 log.txt
 err.txt
+.venv

@@ -22,6 +22,7 @@ then
 fi
 
 room=$1
+mid=-1
 
 if [ -z "$2" ]
 then
@@ -29,6 +30,18 @@ then
 else
    pull="$2"
 fi
+
+# Check who the user is
+username=$(curl -s -H "Authorization: Bearer $CAPI_TOKEN" -G \
+   "$CAPI_URL/small/me" | python3 -c '
+import csv
+import sys
+reader = csv.reader(sys.stdin)
+for row in reader:
+   print(row[1])
+')
+
+echo "Listening as $username"
 
 # Prints the normal messages to stdout and prints the max mid to stderr
 pymessage='
@@ -39,26 +52,47 @@ try:
    init()
 except:
    # No colorama...
-   Fore = { 
-      BLACK : "", RED : "", GREEN : "", YELLOW : "", 
-      BLUE : "", MAGENTA : "", CYAN : "", WHITE: "" 
-   }
-   Back = Fore
-   Style = { NORMAL : "", BRIGHT : "", DIM : "", RESET_ALL : "" }
+   class Empty: 
+      pass
+   Fore = Empty()
+   Back = Empty()
+   Style = Empty()
+   def colassign(o):
+      o.BLACK=""
+      o.RED=""
+      o.GREEN=""
+      o.YELLOW=""
+      o.BLUE=""
+      o.MAGENTA=""
+      o.CYAN=""
+      o.WHITE="" 
+   colassign(Fore)
+   colassign(Back)
+   Style.NORMAL = ""
+   Style.BRIGHT = ""
+   Style.DIM = ""
+   Style.RESET_ALL = ""
 reader = csv.reader(sys.stdin)
 maxid = 0
 for row in reader:
-   
+   if row[4] in [ "userlist", "eventid" ]:
+      continue
+   print(Style.BRIGHT + Fore.GREEN + row[1] + "  " + Style.DIM + Fore.MAGENTA + row[3])
+   print(Style.RESET_ALL + Fore.WHITE + row[2])
+   if row[8]:
+      thisid = int(row[8])
+      if thisid > maxid:
+         maxid = thisid
 print(maxid, file=sys.stderr)
 '
 
 # The initial call pulls some amount, the later calls are an infinite loop.
 # If the call fails, we wait for some time before trying again...
-AUTH_HEADER="-H 'Authorization: Bearer $CAPI_TOKEN'"
 
-curl -s $AUTH_HEADER -G \
-   --data-urlencode "get=$pull" \
+curl -s -H "Authorization: Bearer $CAPI_TOKEN" -G \
+   --data-urlencode "get=-$pull" \
    --data-urlencode "rooms=$room" \
-   "$CAPI_URL/small/chat" 
+   --data-urlencode "mid=$mid" \
+   "$CAPI_URL/small/chat" | python3 -c "$pymessage"
 
 echo "DONE"

@@ -7,6 +7,8 @@ then
    CAPI_TOKEN=$(./auth.sh)
 fi
 
+export CAPI_TOKEN
+
 if [ -z $CAPI_ROOM ]
 then
    while true
@@ -20,7 +22,6 @@ then
    done
 fi
 
-export CAPI_TOKEN
 export CAPI_ROOM
 
 ./listen.sh $CAPI_ROOM
