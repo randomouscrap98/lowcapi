@@ -61,3 +61,4 @@ curl -s $AUTH_HEADER -G \
    --data-urlencode "rooms=$room" \
    "$CAPI_URL/small/chat" 
 
+echo "DONE"

@@ -2,20 +2,27 @@
 
 set -e
 
-CAPI_TOKEN=$(./auth.sh)
+if [ -z $CAPI_TOKEN ]
+then
+   CAPI_TOKEN=$(./auth.sh)
+fi
 
-while true
-do
-   ./search.sh
-   read -p "Room choice (0 to search again): " room
-   if [ "$room" != "0" ]
-   then
-      break
-   fi
-done
+if [ -z $CAPI_ROOM ]
+then
+   while true
+   do
+      ./search.sh
+      read -p "Room choice (0 to search again): " CAPI_ROOM
+      if [ "$CAPI_ROOM" != "0" ]
+      then
+         break
+      fi
+   done
+fi
 
-echo "Room: $room"
+export CAPI_TOKEN
+export CAPI_ROOM
 
-./listen.sh $room
+./listen.sh $CAPI_ROOM
 
 
