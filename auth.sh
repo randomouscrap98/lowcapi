@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 # An example authentication script, or you can use this one.
 # This script briefly exposes your password on the process list.
 # If this is a concern, just visit the url in your browser and
@@ -25,12 +23,26 @@ then
     CAPI_TOKEN_EXPIRE="31536000"
 fi
 
+# NOTE: if your curl does not support --fail-with-body (7.76 or higher), 
+# you can simply return the result of curl without it directly and skip
+# all the stuff after it. However, it means you will not know if your 
+# login failed over stderr
+
 # Send the GET request using curl with URL-encoding
-curl -s -G \
+response=`curl --fail-with-body -s -G \
    --data-urlencode "username=$username" \
    --data-urlencode "password=$password" \
    --data-urlencode "expireSeconds=$CAPI_TOKEN_EXPIRE" \
-   "$CAPI_URL/small/login"
+   "$CAPI_URL/small/login"`
 
->&2 echo
+error=$?
+
+# Selectively output to different places
+if [ $error -ne 0 ]
+then
+   >&2 echo "$response"
+   exit $error
+fi
+
+echo "$response"
 
