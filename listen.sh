@@ -76,7 +76,7 @@ maxid = 0
 for row in reader:
    if row[4] == "userlist":
       if row[6] != "0":
-         print(Fore.CYAN + "Userlist: " + (row[2] or "EMPTY") + " " + 
+         print(Fore.YELLOW + "Userlist: " + (row[2] or "EMPTY") + "\t" + 
             Style.DIM + Fore.MAGENTA + row[3] + Style.RESET_ALL)
       continue 
    elif row[4] == "eventId":
@@ -90,7 +90,7 @@ for row in reader:
       print(Style.RESET_ALL + Fore.RED + row[8] + "(edit)", end="")
    else:
       print(Style.DIM + Fore.WHITE + row[8], end="")
-   print(" " + Style.DIM + Fore.MAGENTA + row[3])
+   print("\t" + Style.DIM + Fore.MAGENTA + row[3])
    lines = textwrap.fill(row[2].rstrip("\n"),
       width=shutil.get_terminal_size().columns - 2,
       replace_whitespace=False).split("\n")
