@@ -28,5 +28,11 @@ fi
 # "too fancy" of a format or whatever (no standard stuff for it)
 curl -s $AUTH_HEADER -G \
    --data-urlencode "search=%$search%" \
-   "$CAPI_URL/small/search" | python3 printsearch.py
+   "$CAPI_URL/small/search" | python3 -c '
+import csv
+import sys
+reader = csv.reader(sys.stdin)
+for row in reader:
+   print("{:>7} - {}".format(row[6], row[0]))
+'
 
