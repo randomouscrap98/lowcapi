@@ -17,8 +17,6 @@ fi
 >&2 echo -n "Search: "
 read search
 
->&2 echo 
-
 # Only do the header if the user set the thing (it's not required)
 if [ -z "$CAPI_TOKEN" ]; then
     AUTH_HEADER=""
@@ -26,9 +24,15 @@ else
     AUTH_HEADER="-H 'Authorization: Bearer $CAPI_TOKEN'"
 fi
 
-# now the actual search!
-response=`curl -s $AUTH_HEADER -G \
-   --data-urlencode "search=$search" \
-   "$CAPI_URL/small/search"`
+# now the actual search! This uses python because apparently csv is 
+# "too fancy" of a format or whatever (no standard stuff for it)
+curl -s $AUTH_HEADER -G \
+   --data-urlencode "search=%$search%" \
+   "$CAPI_URL/small/search" | python3 - <<END
+import csv
+import sys
+reader = csv.reader(sys.stdin)
+for row in reader:
+   print("{} - {}".format(row[0], row[6]))
+END
 
-echo $response
