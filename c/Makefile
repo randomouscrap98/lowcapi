@@ -10,7 +10,7 @@ LDFLAGS = -lcurl
 PRG = lowcapi
 
 # -- The actual part you may need to modify if you add stuff --
-BASEDEPS = api.c mycsv.c
+BASEDEPS = lcutils.c mycsv.c api.c
 SRCS = main.c $(BASEDEPS)
 
 # -- Change this to whatever libs/include you need for your system

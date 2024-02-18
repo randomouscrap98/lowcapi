@@ -2,31 +2,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 
+#include "lcutils.h"
 #include "api.h"
 #include "mycsv.h"
 
 
 //#define LCFAIL(fc, ...) { if(fc) { error(__VA_ARGS__); } else { log_error(__VA_ARGS__); } }
 
-static void error(char * fmt, ...)
-{
-   va_list args;
-   va_start(args, fmt);
-
-   char prepend[] = "ERROR: ";
-   char * newfmt = malloc(strlen(prepend) + strlen(fmt) + 1);
-   if(newfmt) {
-      sprintf(newfmt, "%s%s", prepend, fmt);
-      vfprintf(stderr, newfmt, args);
-      free(newfmt);
-   }
-   else {
-      vfprintf(stderr, fmt, args);
-   }
-   exit(1);
-}
 
 // C is so... mmmm sometimes
 void lc_makesearch(char * string, size_t maxlen)
