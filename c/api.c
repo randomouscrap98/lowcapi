@@ -254,43 +254,29 @@ HttpResponse * lc_getme(CapiValues * capi)
    return lc_getapi(capi, "small/Me", NULL);
 }
 
-//struct HttpResponse * lc_login(char * username, char * password, struct LowcapiConfig * config)
-//{
-//   struct HttpRequest request;
-//   lc_initrequest(&request, "small/Login", config);
-//
-//   struct RequestValue * values = NULL;
-//   char expire[16];
-//
-//   sprintf(expire, "%d", config->tokenexpireseconds);
-//
-//   values = lc_addvalue(values, "username", username);
-//   values = lc_addvalue(values, "password", password);
-//   values = lc_addvalue(values, "expireSeconds", expire);
-//
-//   struct HttpResponse * result = lc_getapi(&request, values);
-//   lc_freeallvalues(values, NULL);
-//   return result;
-//}
-//
-//
+HttpResponse * lc_getlogin(CapiValues * capi, char * username, char * password)
+{
+   RequestValue * values = NULL;
+   char expire[16];
+
+   sprintf(expire, "%d", LC_TOKENEXPIRE); //TODO: make this configurable
+
+   values = lc_addvalue(values, "username", username);
+   values = lc_addvalue(values, "password", password);
+   values = lc_addvalue(values, "expireSeconds", expire);
+
+   HttpResponse * result = lc_getapi(capi, "small/login", values);
+   lc_freeallvalues(values, NULL);
+   return result;
+}
+
+
 
 MeResponse lc_parseme(char * text)
 {
    if(!(text && strlen(text))) {
       error("Invalid argument: empty!");
    }
-   //HttpResponse * result = lc_getapi(capi, "small/Me", NULL);
-   //char * text = NULL;
-
-   //MeResponse * me = NULL;
-
-   //if(!lc_consumeresponse(result, &text))
-   //{
-   //   fprintf(stderr, "Token invalid or service unreachable: %s", text ? text : "UNKNOWN");
-   //}
-   //else
-   //{
 
    MeResponse me;
    me.userid = 0;
@@ -310,9 +296,6 @@ MeResponse lc_parseme(char * text)
       me.userid = atoi(cursor.line->fields[0]);
       sprintf(me.username, "%s", cursor.line->fields[1]);
    }
-   //}
-
-   //free(text);
 
    return me;
 }

@@ -12,6 +12,8 @@
 #define LC_USERNAMEMAX 50
 #define LC_TOKENMAXLENGTH 256
 
+#define LC_TOKENEXPIRE 31536000
+
 #define LCKEY_CONTENTNAME 0
 #define LCKEY_MSGUSER 1
 #define LCKEY_MSG 2
@@ -78,6 +80,7 @@ typedef struct CapiValues
 //This function can handle all simple "get" requests on the api (JUST the api)
 HttpResponse * lc_getapi(CapiValues * capi, char * endpoint, RequestValue * values);
 HttpResponse * lc_getme(CapiValues * capi);
+HttpResponse * lc_getlogin(CapiValues * capi, char * username, char * password);
 
 typedef struct MeResponse
 {
@@ -87,7 +90,6 @@ typedef struct MeResponse
 
 MeResponse lc_parseme(char * text);
 
-//struct HttpResponse * lc_login(char * username, char * password, struct LowcapiConfig * config);
 
 //int lc_verifycontent(struct CsvLineCursor * cursor);
 #endif

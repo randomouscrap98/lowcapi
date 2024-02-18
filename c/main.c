@@ -71,7 +71,7 @@ void auth_action(CapiValues * capi, bool use_token)
 
    if (login_required) {
       fprintf(stderr, "Username: ");
-      if(!fgets(username, SMALLINPUTLEN, stdin)) {
+      if(!lc_getinput(username, SMALLINPUTLEN, stdin)) {
          error("Couldn't read username?");
       }
 #ifdef BUILDWINDOWS
@@ -86,6 +86,21 @@ void auth_action(CapiValues * capi, bool use_token)
       }
       fprintf(stderr, "\n");
 #endif
+      // Now we can finally check their login
+      HttpResponse * loginres = lc_getlogin(capi, username, password);
+      if(!lc_responseok(loginres)) {
+         error("Login error: %s", strvalid(loginres->response) ? loginres->response : "UNKNOWN");
+      }
+      else if(!strvalid(loginres->response)){
+         error("Login error: nothing returned from endpoint!");
+      }
+      else if(strlen(loginres->response) > LC_TOKENMAXLENGTH) {
+         error("Token too large!");
+      }
+      else {
+         strcpy(capi->token, loginres->response);
+      }
+      lc_freeresponse(loginres);
    }
 
    printf("%s\n", capi->token);

@@ -10,10 +10,24 @@
 #include "lcutils.h"
 
 
+char * lc_getinput(char * input, size_t maxlen, FILE * stream)
+{
+   char * result = fgets(input, maxlen, stream);
+
+   if(result) {
+      size_t len = strlen(result);
+      if(len) {
+         result[len - 1] = 0; //Get rid of the newline
+      }
+   }
+
+   return result;
+}
+
 #ifdef BUILDWINDOWS
 char * lc_getpass(char * input, size_t maxlen, FILE * stream)
 {
-   return fgets(input, maxlen, stream);
+   return lc_getinput(input, maxlen, stream);
 }
 #else
 // Taken mostly from https://www.gnu.org/software/libc/manual/html_node/getpass.html
@@ -33,7 +47,7 @@ char * lc_getpass(char * input, size_t maxlen, FILE * stream)
    }
 
    // Read the passphrase 
-   char * result = fgets(input, maxlen, stream);
+   char * result = lc_getinput(input, maxlen, stream);
 
    // Restore terminal.
    (void) tcsetattr(fileno(stream), TCSAFLUSH, &old);
