@@ -24,6 +24,8 @@ fi
 
 export CAPI_ROOM
 
-./listen.py $CAPI_ROOM
+tmux \
+   new-session "./listen.py $CAPI_ROOM" \; \
+   split-window -h "./sendloop.sh $CAPI_ROOM"
 
 
