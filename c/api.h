@@ -9,7 +9,7 @@
 // endpoint should always be pretty small. If you need to connect to a 
 // larger endpoint, IDK... consider making this larger?
 #define LC_URLPARTLENGTH 512
-//#define LC_USERNAMEMAX 50
+#define LC_USERNAMEMAX 50
 #define LC_TOKENMAXLENGTH 256
 
 #define LCKEY_CONTENTNAME 0
@@ -65,12 +65,6 @@ int lc_responseok(HttpResponse * response);
 void lc_freeresponse(HttpResponse * response);
 int lc_consumeresponse(HttpResponse * response, char ** output);
 
-//struct MeResponse
-//{
-//   char username[LC_USERNAMEMAX + 1];
-//   long userid;
-//};
-
 // Values passed in from the user which do not change for the duration of the
 // run. This api is not meant for longtime use; this is tailor made for the
 // needs of the lowcapi interface.
@@ -83,11 +77,17 @@ typedef struct CapiValues
 
 //This function can handle all simple "get" requests on the api (JUST the api)
 HttpResponse * lc_getapi(CapiValues * capi, char * endpoint, RequestValue * values);
+HttpResponse * lc_getme(CapiValues * capi);
 
-//These are highly specialized functions that only require a bare minimum but
-//assume you DON'T want them to immediately fail on request failure
+typedef struct MeResponse
+{
+   char username[LC_USERNAMEMAX + 1];
+   long userid;
+} MeResponse;
+
+MeResponse lc_parseme(char * text);
+
 //struct HttpResponse * lc_login(char * username, char * password, struct LowcapiConfig * config);
-//struct MeResponse lc_getme(char * token, struct LowcapiConfig * config);
 
 //int lc_verifycontent(struct CsvLineCursor * cursor);
 #endif

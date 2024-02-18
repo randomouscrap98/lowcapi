@@ -249,6 +249,11 @@ HttpResponse * lc_getapi(CapiValues * capi, char * endpoint, RequestValue * valu
    return result;
 }
 
+HttpResponse * lc_getme(CapiValues * capi)
+{
+   return lc_getapi(capi, "small/Me", NULL);
+}
+
 //struct HttpResponse * lc_login(char * username, char * password, struct LowcapiConfig * config)
 //{
 //   struct HttpRequest request;
@@ -269,43 +274,46 @@ HttpResponse * lc_getapi(CapiValues * capi, char * endpoint, RequestValue * valu
 //}
 //
 //
-//struct MeResponse lc_getme(char * token, struct LowcapiConfig * config)
-//{
-//   struct HttpRequest request;
-//   lc_initrequest(&request, "small/Me", config);
-//   sprintf(request.token, "%s", token);
-//
-//   struct HttpResponse * result = lc_getapi(&request, NULL);
-//   char * text = NULL;
-//
-//   struct MeResponse me;
-//   me.userid = 0;
-//   me.username[0] = 0;
-//
-//   if(!lc_consumeresponse(result, &text))
-//   {
-//      if(text)
-//         log_error("Error with small/Me: %s", text);
-//      else
-//         log_error("Error with small/Me: UNKNOWN");
-//   }
-//   else
-//   {
-//      struct CsvLineCursor cursor = csv_initcursor_f(text);
-//      while(csv_readline(&cursor))
-//      {
-//         if(cursor.error)
-//            error("Error while parsing me data: %d", cursor.error);
-//
-//         if(cursor.line->fieldcount < 2) error("CSV failure: me output missing fields!");
-//
-//         log_debug("Me result: uid=%s, username=%s", cursor.line->fields[0], cursor.line->fields[1]);
-//         me.userid = atoi(cursor.line->fields[0]);
-//         sprintf(me.username, "%s", cursor.line->fields[1]);
-//      }
-//   }
-//
-//   free(text);
-//
-//   return me;
-//}
+
+MeResponse lc_parseme(char * text)
+{
+   if(!(text && strlen(text))) {
+      error("Invalid argument: empty!");
+   }
+   //HttpResponse * result = lc_getapi(capi, "small/Me", NULL);
+   //char * text = NULL;
+
+   //MeResponse * me = NULL;
+
+   //if(!lc_consumeresponse(result, &text))
+   //{
+   //   fprintf(stderr, "Token invalid or service unreachable: %s", text ? text : "UNKNOWN");
+   //}
+   //else
+   //{
+
+   MeResponse me;
+   me.userid = 0;
+   me.username[0] = 0;
+
+   struct CsvLineCursor cursor = csv_initcursor_f(text);
+   while(csv_readline(&cursor))
+   {
+      if(cursor.error) {
+         error("Error while parsing 'me' data: %d", cursor.error);
+      }
+
+      if(cursor.line->fieldcount < 2) {
+         error("CSV failure: me output missing fields!");
+      }
+
+      me.userid = atoi(cursor.line->fields[0]);
+      sprintf(me.username, "%s", cursor.line->fields[1]);
+   }
+   //}
+
+   //free(text);
+
+   return me;
+}
+

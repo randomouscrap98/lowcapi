@@ -9,6 +9,12 @@
 #include "api.h"
 #include "lcutils.h"
 
+//Special stuff: we hide the password in unix-like systems, which 
+//is apparently really hard
+#ifndef BUILDWINDOWS
+#include <termios.h>
+#endif
+
 #define SMALLINPUTLEN 100
 
 
@@ -43,17 +49,58 @@ void get_base_env(CapiValues * capi, bool token_required)
    }
 }
 
+void auth_action(CapiValues * capi, bool use_token)
+{
+   bool login_required = true;
+   char username[SMALLINPUTLEN + 1]; //These are allocated no matter what anyway, so...
+   char password[SMALLINPUTLEN + 1];
+
+   // User asked to use the existing token; check it for validity
+   if(use_token && strlen(capi->token)) {
+      HttpResponse * meres = lc_getme(capi);
+      if(lc_responseok(meres)) {
+         MeResponse me = lc_parseme(meres->response);
+         fprintf(stderr, "Already logged in as %s (%ld)\n", me.username, me.userid);
+         login_required = false;
+      }
+      else {
+         fprintf(stderr, "Token invalid or endpoint unreachable\n");
+      }
+      lc_freeresponse(meres);
+   }
+
+   if (login_required) {
+      fprintf(stderr, "Username: ");
+      if(!fgets(username, SMALLINPUTLEN, stdin)) {
+         error("Couldn't read username?");
+      }
+#ifdef BUILDWINDOWS
+      fprintf(stderr, "Password (!!VISIBLE!!): "
+      if(!fgets(password, SMALLINPUTLEN, stdin)) {
+         error("Couldn't read password?");
+      }
+#else
+      fprintf(stderr, "Password: ");
+      if(!lc_getpass(password, SMALLINPUTLEN, stdin)) {
+         error("Couldn't read password?");
+      }
+      fprintf(stderr, "\n");
+#endif
+   }
+
+   printf("%s\n", capi->token);
+}
+
 
 // ----------------------------
 //       Main                  
 // ----------------------------
 
-
 int main(int argc, char * argv[])
 {
    if(argc < 2) {
       error("Must provide the action! Usage:\n%s\n%s\n%s\n%s",
-            " lowcapi auth",
+            " lowcapi [e]auth",
             " lowcapi search",
             " lowcapi send <roomid>",
             " lowcapi listen <roomid>"
@@ -66,6 +113,11 @@ int main(int argc, char * argv[])
 
    if(!strcmp(argv[1], "auth")) {
       get_base_env(&capi, false);
+      auth_action(&capi, false);
+   }
+   else if(!strcmp(argv[1], "eauth")) {
+      get_base_env(&capi, false);
+      auth_action(&capi, true);
    }
    else if(!strcmp(argv[1], "search")) {
       get_base_env(&capi, false);

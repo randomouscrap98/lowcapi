@@ -3,8 +3,39 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifndef BUILDWINDOWS
+#include <termios.h>
+#endif
+
+
 #include "lcutils.h"
 
+
+#ifndef BUILDWINDOWS
+// Taken mostly from https://www.gnu.org/software/libc/manual/html_node/getpass.html
+char * lc_getpass(char * input, size_t maxlen, FILE * stream)
+{
+   struct termios old, new;
+
+   // Turn echoing off and fail if we can’t.
+   if (tcgetattr(fileno(stream), &old) != 0) {
+      return NULL;
+   }
+
+   new = old;
+   new.c_lflag &= ~ECHO;
+   if (tcsetattr (fileno (stream), TCSAFLUSH, &new) != 0) {
+      return NULL;
+   }
+
+   // Read the passphrase 
+   char * result = fgets(input, maxlen, stream);
+
+   // Restore terminal.
+   (void) tcsetattr(fileno(stream), TCSAFLUSH, &old);
+   return result;
+}
+#endif
 
 void error(char * fmt, ...)
 {

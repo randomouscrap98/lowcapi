@@ -4,6 +4,7 @@ A set of scripts and tools to connect to the "small" endpoint in a contentapi in
 ## How to use
 There are different implementations depending on your needs. Right now, these implementations are available:
 - Python
+- C
 
 Each one should implement a set of standard "commands" which you can use to interface with contentapi. These commands boil down to:
 - **Auth**: send a username and password through stdin and get back a token through stdout.
@@ -16,6 +17,6 @@ Each one should implement a set of standard "commands" which you can use to inte
 For ALL commands, you must set `CAPI_URL`
 
 ## Simple implementation
-There is an example which showcases the use of each of the commands, called `simple.sh` within the python folder. You can 
+There is an example which showcases the use of all the commands, called `simple.sh` within the python folder. You can 
 use it as the basis for your own chat, or simply use it as-is. If you want to skip the room question in simple.sh, set
 `CAPI_ROOM` environment variable
