@@ -8,29 +8,6 @@
 #include "mycsv.h"
 
 
-//#define LCFAIL(fc, ...) { if(fc) { error(__VA_ARGS__); } else { log_error(__VA_ARGS__); } }
-
-
-// C is so... mmmm sometimes
-void lc_makesearch(char * string, size_t maxlen)
-{
-   size_t oldlen = strlen(string);
-   size_t newlen = oldlen + 2;
-
-   if(newlen > maxlen - 1) {
-      newlen = maxlen - 1;
-   }
-
-   //Luckily, we know the very end has at least a 0 so...
-   for(int i = oldlen; i > 0; i--) {
-      string[i] = string[i - 1];
-   }
-
-   string[0] = '%';
-   string[newlen] = 0;
-   string[newlen - 1] = '%';
-}
-
 //int lc_verifycontent(struct CsvLineCursor * cursor)
 //{
 //   if(cursor->line->fieldcount < LC_CONTENTFIELDS) {

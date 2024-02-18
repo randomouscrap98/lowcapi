@@ -14,7 +14,7 @@ void error(char * fmt, ...)
    char prepend[] = "ERROR: ";
    char * newfmt = malloc(strlen(prepend) + strlen(fmt) + 1);
    if(newfmt) {
-      sprintf(newfmt, "%s%s", prepend, fmt);
+      sprintf(newfmt, "%s%s\n", prepend, fmt);
       vfprintf(stderr, newfmt, args);
       free(newfmt);
    }
@@ -23,3 +23,24 @@ void error(char * fmt, ...)
    }
    exit(1);
 }
+
+// C is so... mmmm sometimes
+void lc_makesearch(char * string, size_t maxlen)
+{
+   size_t oldlen = strlen(string);
+   size_t newlen = oldlen + 2;
+
+   if(newlen > maxlen - 1) {
+      newlen = maxlen - 1;
+   }
+
+   //Luckily, we know the very end has at least a 0 so...
+   for(int i = oldlen; i > 0; i--) {
+      string[i] = string[i - 1];
+   }
+
+   string[0] = '%';
+   string[newlen] = 0;
+   string[newlen - 1] = '%';
+}
+
