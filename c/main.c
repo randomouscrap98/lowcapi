@@ -76,7 +76,7 @@ void auth_action(CapiValues * capi, bool use_token)
       }
 #ifdef BUILDWINDOWS
       fprintf(stderr, "Password (!!VISIBLE!!): "
-      if(!fgets(password, SMALLINPUTLEN, stdin)) {
+      if(!lc_getpass(password, SMALLINPUTLEN, stdin)) {
          error("Couldn't read password?");
       }
 #else

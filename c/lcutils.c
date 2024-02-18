@@ -7,11 +7,15 @@
 #include <termios.h>
 #endif
 
-
 #include "lcutils.h"
 
 
-#ifndef BUILDWINDOWS
+#ifdef BUILDWINDOWS
+char * lc_getpass(char * input, size_t maxlen, FILE * stream)
+{
+   return fgets(input, maxlen, stream);
+}
+#else
 // Taken mostly from https://www.gnu.org/software/libc/manual/html_node/getpass.html
 char * lc_getpass(char * input, size_t maxlen, FILE * stream)
 {
@@ -36,6 +40,7 @@ char * lc_getpass(char * input, size_t maxlen, FILE * stream)
    return result;
 }
 #endif
+
 
 void error(char * fmt, ...)
 {
