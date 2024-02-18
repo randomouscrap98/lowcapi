@@ -4,10 +4,8 @@ import io
 import os
 import sys
 import csv
-import getpass
 import urllib.parse
 import urllib.request
-from urllib.error import HTTPError
 
 # User input setup
 capiurl=os.environ.get("CAPI_URL")
