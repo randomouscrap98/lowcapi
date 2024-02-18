@@ -75,7 +75,7 @@ void auth_action(CapiValues * capi, bool use_token)
          error("Couldn't read username?");
       }
 #ifdef BUILDWINDOWS
-      fprintf(stderr, "Password (!!VISIBLE!!): "
+      fprintf(stderr, "Password (!!VISIBLE!!): ");
       if(!lc_getpass(password, SMALLINPUTLEN, stdin)) {
          error("Couldn't read password?");
       }
