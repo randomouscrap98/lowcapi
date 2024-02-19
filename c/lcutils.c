@@ -30,6 +30,25 @@ char * lc_getinput(char * input, size_t maxlen, FILE * stream)
    return result;
 }
 
+char * lc_getallinput(char * input, size_t maxlen, FILE * stream)
+{
+   int length = 0;
+   char * nextinput = input;
+   while(fgets(nextinput, maxlen - length, stream))
+   {
+      length += strlen(nextinput);
+      nextinput = input + length;
+   }
+
+   fprintf(stderr, "Length: %d, message: %s\n", length, input);
+
+   if(length && (input[length - 1] == '\n')) {
+      input[length - 1] = 0; //Replace LAST newline, if it exists
+   }
+
+   return input;
+}
+
 #ifdef BUILDWINDOWS
 char * lc_getpass(char * input, size_t maxlen, FILE * stream)
 {

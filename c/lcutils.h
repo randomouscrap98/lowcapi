@@ -67,6 +67,7 @@ void lc_makesearch(char * string, size_t maxlen);
 
 char * lc_getpass(char * input, size_t maxlen, FILE * stream);
 char * lc_getinput(char * input, size_t maxlen, FILE * stream);
+char * lc_getallinput(char * input, size_t maxlen, FILE * stream);
 
 void lc_sleep(long milliseconds);
 

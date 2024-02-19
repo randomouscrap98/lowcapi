@@ -182,7 +182,7 @@ void send_action(CapiValues * capi, long room_id, bool lookup_avatar)
 {
    char message[MESSAGELEN + 1];
    fprintf(stderr, "Message: ");
-   if(!lc_getinput(message, MESSAGELEN, stdin)) {
+   if(!lc_getallinput(message, MESSAGELEN, stdin)) {
       error("Couldn't read message?");
    }
 
