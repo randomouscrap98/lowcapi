@@ -223,15 +223,21 @@ void handle_listen(HttpResponse * response, long * mid, bool parse_output)
             error("Error while parsing 'chat' data: %d", cursor.error);
          }
 
+         if(cursor.line->fieldcount < LC_CONTENTFIELDS) {
+            error("CSV failure: chat output missing fields!");
+         }
+
+         long thismid = atol(cursor.line->fields[LCKEY_CONTENTMSGID]);
+
+         if(thismid > *mid)
+            *mid = thismid;
+
          if(parse_output) {
-            if(cursor.line->fieldcount < LC_CONTENTFIELDS) {
-               error("CSV failure: chat output missing fields!");
-            }
             print_chatlineparse(cursor.line);
          }
          else {
-            cursor.line->start[cursor.line->length] = 0;
-            printf("%s", cursor.line->start);
+            cursor.line->start[cursor.line->length - 1] = 0;
+            printf("%s\n", cursor.line->start);
          }
       }
    }

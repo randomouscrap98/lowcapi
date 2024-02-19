@@ -7,16 +7,7 @@
 #include "api.h"
 #include "mycsv.h"
 
-
-//int lc_verifycontent(struct CsvLineCursor * cursor)
-//{
-//   if(cursor->line->fieldcount < LC_CONTENTFIELDS) {
-//      log_error("Bad format returned from search endpoint");
-//      csv_endcursor(cursor);
-//      return 0;
-//   }
-//   return 1;
-//}
+#define PRINTURL
 
 void lc_curlinit()
 {
@@ -37,8 +28,12 @@ RequestValue * lc_addvalue(RequestValue * head, char * key, char * value)
    if(!this) {
       error("Couldn't allocate memory for request value!");
    }
-   this->key = key;
-   this->value = value;
+   this->key = malloc(strlen(key) + 1);
+   if(!this->key) { error("Couldn't allocate buffer for param key!"); }
+   strcpy(this->key, key);
+   this->value = malloc(strlen(value) + 1);
+   if(!this->value) { error("Couldn't allocate buffer for param value!"); }
+   strcpy(this->value, value);
    this->next = head;
 
    //Item we created always becomes the new head. This greatly simplifies
@@ -61,17 +56,11 @@ void lc_freeallvalues(RequestValue * head, void (*finalize)(RequestValue *))
       lc_freeallvalues(head->next, finalize);
       if(finalize)
          finalize(head);
+      free(head->key);
+      free(head->value);
       free(head);
    }
 }
-
-//void lc_initrequest(struct HttpRequest * request, const char * endpoint, struct LowcapiConfig * config)
-//{
-//   sprintf(request->endpoint, "%s", endpoint);
-//   request->config = config;
-//   request->token[0] = 0;
-//   request->fail_critical = 0;
-//}
 
 char * lc_constructurl(CapiValues * capi, char * endpoint, RequestValue * values)
 {
