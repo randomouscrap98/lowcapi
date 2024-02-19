@@ -318,7 +318,7 @@ void handle_listen(HttpResponse * response, ListenData * ld)
       }
    }
    else {
-      fprintf(stderr, "Listen error; sleeping for %dms", ERRORSLEEPMS);
+      fprintf(stderr, "Listen error; sleeping for %dms\n", ERRORSLEEPMS);
       lc_sleep(ERRORSLEEPMS);
    }
    lc_freeresponse(response);
