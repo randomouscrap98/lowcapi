@@ -8,6 +8,7 @@ CC = gcc
 CFLAGS_common = -Wall
 LDFLAGS = -lcurl
 PRG = lowcapi
+CSVTPRG = testcsv
 
 # -- The actual part you may need to modify if you add stuff --
 BASEDEPS = lcutils.c mycsv.c api.c
@@ -42,6 +43,12 @@ all: $(PRG)
 run: all
 	./$(PRG) 2> err.txt
 
+runtestcsv: $(CSVTPRG)
+	./$^ "csvtest/files"
+
+$(CSVTPRG): mycsv.o csvtest/test.o
+	$(CC) $(CFLAGS) -o $@ $^
+
 # Main compilation, should produce 'lowcapi'
 $(PRG): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
@@ -51,4 +58,6 @@ $(PRG): $(OBJS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f $(PRG) $(OBJS)
+	rm -f $(PRG) $(CSVTPRG) 
+	find . -name "*.o" -type f -exec rm {} +
+
