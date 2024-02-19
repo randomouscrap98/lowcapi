@@ -56,6 +56,8 @@ struct CsvAnalysis csv_analyze(char * begin, char * end);
 // of any pointer are not guaranteed after the call to your function.
 struct CsvLine
 {
+   char * start;
+   int length;
    char ** fields;
    int fieldcount;
    int fieldscapacity;

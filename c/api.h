@@ -41,20 +41,9 @@ typedef struct RequestValue
 } RequestValue;
 
 RequestValue * lc_addvalue(RequestValue * head, char * key, char * value);
+RequestValue * lc_addvalue_l(RequestValue * head, char * key, long value);
 void lc_freeallvalues(RequestValue * head, void (*finalize)(RequestValue *));
 
-
-// This is a rather large struct, but you can reuse it if you want.
-// This is designed so it doesn't need freeing, at the cost of memory.
-//struct HttpRequest
-//{
-//   //char endpoint[LC_URLPARTLENGTH + 1];
-//   //char token[LC_TOKENMAXLENGTH + 1];
-//   //NOTE: don't add the dynamic "RequestValues" here, send them
-//   //separately for the required requests. Some may not even need it
-//};
-
-//void lc_initrequest(struct HttpRequest * request, const char * endpoint);
 
 // Responses can be any size. As such, all of this struct is designed
 // for dynamic memory.
@@ -69,6 +58,7 @@ typedef struct HttpResponse
 int lc_responseok(HttpResponse * response);
 void lc_freeresponse(HttpResponse * response);
 int lc_consumeresponse(HttpResponse * response, char ** output);
+
 
 // Values passed in from the user which do not change for the duration of the
 // run. This api is not meant for longtime use; this is tailor made for the
@@ -87,6 +77,7 @@ HttpResponse * lc_getlogin(CapiValues * capi, char * username, char * password);
 HttpResponse * lc_getsearch(CapiValues * capi, char * search);
 HttpResponse * lc_getpost(CapiValues * capi, long id, char * message, char * avatar,
       char * markup);
+HttpResponse * lc_getchat(CapiValues * capi, long mid, long get, char * rooms);
 
 typedef struct MeResponse
 {

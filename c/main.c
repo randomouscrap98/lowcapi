@@ -11,6 +11,9 @@
 
 #define SMALLINPUTLEN 100
 #define MESSAGELEN 3000
+#define DEFAULTPULL 30
+
+#define ERRORSLEEPMS 3000
 
 
 // Retrieve the environment variables we will generally use
@@ -201,6 +204,66 @@ void send_action(CapiValues * capi, long room_id, bool lookup_avatar)
    lc_freeresponse(messageres);
 }
 
+void print_chatlineparse(struct CsvLine * line)
+{
+         //printf("%c%7s - %s\n", private, 
+         //      cursor.line->fields[LCKEY_CONTENTID],
+         //      cursor.line->fields[LCKEY_CONTENTNAME]);
+}
+
+void handle_listen(HttpResponse * response, long * mid, bool parse_output)
+{
+   if(lc_responseok(response)) {
+      // do the thing, we need to scan the csv and get the mid for 
+      // future requests. Each line is output differently
+      struct CsvLineCursor cursor = csv_initcursor_f(response->response);
+      while(csv_readline(&cursor)) //These lines are cleaned up automatically
+      {
+         if(cursor.error) {
+            error("Error while parsing 'chat' data: %d", cursor.error);
+         }
+
+         if(parse_output) {
+            if(cursor.line->fieldcount < LC_CONTENTFIELDS) {
+               error("CSV failure: chat output missing fields!");
+            }
+            print_chatlineparse(cursor.line);
+         }
+         else {
+            cursor.line->start[cursor.line->length] = 0;
+            printf("%s", cursor.line->start);
+         }
+      }
+   }
+   else {
+      fprintf(stderr, "Listen error; sleeping for %dms", ERRORSLEEPMS);
+      lc_sleep(ERRORSLEEPMS);
+   }
+   lc_freeresponse(response);
+}
+
+// This is actually a loop
+void listen_action(CapiValues * capi, long room_id, bool parse_output, long get)
+{
+   long mid = -1;
+   char rooms[33];
+   sprintf(rooms, "%ld", room_id);
+
+   // First iteration of the loop just pulls some static chat, the rest
+   // continuously pulls 
+   HttpResponse * response = lc_getchat(capi, mid, -get, rooms);
+   handle_listen(response, &mid, parse_output);
+
+   while(true)
+   {
+      response = lc_getchat(capi, mid, get, rooms);
+      handle_listen(response, &mid, parse_output);
+   }
+}
+
+
+#define require_room(argc) if(argc < 3) { error("You must provide at least a room id!"); }
+
 
 // ----------------------------
 //       Main                  
@@ -211,9 +274,9 @@ int main(int argc, char * argv[])
    if(argc < 2) {
       error("Must provide the action! Usage:\n%s\n%s\n%s\n%s",
             " lowcapi [e]auth",
-            " lowcapi search",
-            " lowcapi send <roomid>",
-            " lowcapi listen <roomid>"
+            " lowcapi [p]search",
+            " lowcapi [e]send <roomid>",
+            " lowcapi [p]listen <roomid>"
            );
    }
 
@@ -238,21 +301,26 @@ int main(int argc, char * argv[])
       search_action(&capi, true);
    }
    else if(!strcmp(argv[1], "send")) {
-      if(argc < 3) {
-         error("You must provide at least a room id!");
-      }
+      require_room(argc);
       get_base_env(&capi, true);
       send_action(&capi, atol(argv[2]), false);
    }
    else if(!strcmp(argv[1], "esend")) {
-      if(argc < 3) {
-         error("You must provide at least a room id!");
-      }
+      require_room(argc);
       get_base_env(&capi, true);
       send_action(&capi, atol(argv[2]), true);
    }
-   else if(!strcmp(argv[1], "lilsten")) {
+   else if(!strcmp(argv[1], "listen")) {
+      require_room(argc);
       get_base_env(&capi, true);
+      listen_action(&capi, atol(argv[2]), false, 
+            argc >= 4 ? atol(argv[3]) : DEFAULTPULL);
+   }
+   else if(!strcmp(argv[1], "plisten")) {
+      require_room(argc);
+      get_base_env(&capi, true);
+      listen_action(&capi, atol(argv[2]), true,
+            argc >= 4 ? atol(argv[3]) : DEFAULTPULL);
    }
    else {
       error("Unknown command: %s", argv[1]);

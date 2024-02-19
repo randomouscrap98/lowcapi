@@ -3,7 +3,11 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifndef BUILDWINDOWS
+
+#ifdef BUILDWINDOWS
+#include <windows.h>
+#else
+#include <unistd.h>
 #include <termios.h>
 #endif
 
@@ -29,6 +33,10 @@ char * lc_getpass(char * input, size_t maxlen, FILE * stream)
 {
    return lc_getinput(input, maxlen, stream);
 }
+void lc_sleep(long milliseconds)
+{
+   Sleep(milliseconds);
+}
 #else
 // Taken mostly from https://www.gnu.org/software/libc/manual/html_node/getpass.html
 char * lc_getpass(char * input, size_t maxlen, FILE * stream)
@@ -52,6 +60,10 @@ char * lc_getpass(char * input, size_t maxlen, FILE * stream)
    // Restore terminal.
    (void) tcsetattr(fileno(stream), TCSAFLUSH, &old);
    return result;
+}
+void lc_sleep(long milliseconds)
+{
+   sleep(milliseconds / 1000);
 }
 #endif
 

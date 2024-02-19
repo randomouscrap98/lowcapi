@@ -46,6 +46,13 @@ RequestValue * lc_addvalue(RequestValue * head, char * key, char * value)
    return this;
 }
 
+RequestValue * lc_addvalue_l(RequestValue * head, char * key, long value)
+{
+   char buffer[33];
+   sprintf(buffer, "%ld", value);
+   return lc_addvalue(head, key, buffer);
+}
+
 //Recursively delete the entire value structure
 void lc_freeallvalues(RequestValue * head, void (*finalize)(RequestValue *))
 {
@@ -224,6 +231,11 @@ HttpResponse * lc_getapi(CapiValues * capi, char * endpoint, RequestValue * valu
    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
    free(url);
 
+   //To try to prevent weird issues after going to sleep
+   curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
+   curl_easy_setopt(curl, CURLOPT_TCP_KEEPIDLE, 30L);
+   curl_easy_setopt(curl, CURLOPT_TCP_KEEPINTVL, 30L);
+
    //Setup the callbacks, this produces the eventual response
    HttpResponse * result = lc_curl_setupcallback(curl, endpoint);
 
@@ -322,6 +334,17 @@ HttpResponse * lc_getpost(CapiValues * capi, long id, char * message,
    char url[LC_URLPARTLENGTH + 1];
    snprintf(url, LC_URLPARTLENGTH, "small/post/%ld", id);
    HttpResponse * result = lc_getapi(capi, url, values);
+   lc_freeallvalues(values, NULL);
+   return result;
+}
+
+HttpResponse * lc_getchat(CapiValues * capi, long mid, long get, char * rooms)
+{
+   RequestValue * values = NULL;
+   values = lc_addvalue_l(values, "mid", mid);
+   values = lc_addvalue_l(values, "get", get);
+   values = lc_addvalue(values, "rooms", rooms);
+   HttpResponse * result = lc_getapi(capi, "small/chat", values);
    lc_freeallvalues(values, NULL);
    return result;
 }

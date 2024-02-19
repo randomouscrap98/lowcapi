@@ -275,6 +275,7 @@ struct CsvLine * csv_readline(struct CsvLineCursor * cursor)
    // Initialize the line we'll be reading
    cursor->line = malloc(sizeof(struct CsvLine));
    if(!cursor->line) __MYCSV_EXITREADLINE(CSVERR_BADPROGRAM);
+   cursor->line->start = cursor->current;
    cursor->line->fields = NULL;
    cursor->line->fieldcount = 0;
    cursor->line->fieldscapacity = 0;
@@ -303,6 +304,7 @@ struct CsvLine * csv_readline(struct CsvLineCursor * cursor)
       {
          // We're at the end of a line, set pointer and return current line
          cursor->current = field.nextline;
+         cursor->line->length = cursor->current - cursor->line->start;
          cursor->linecount++;
          return cursor->line;
       }
