@@ -9,12 +9,6 @@
 #include "api.h"
 #include "lcutils.h"
 
-//Special stuff: we hide the password in unix-like systems, which 
-//is apparently really hard
-#ifndef BUILDWINDOWS
-#include <termios.h>
-#endif
-
 #define SMALLINPUTLEN 100
 
 
