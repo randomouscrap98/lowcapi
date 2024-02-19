@@ -154,8 +154,10 @@ int main(int argc, char * argv[])
    // --------------------------------------
    file = loadfile("escape1.csv");
    struct CsvLineCursor cursor = csv_initcursor_f(file);
+   int loops = 0;
    while(csv_readline(&cursor))
    {
+      loops++;
       struct CsvLine * line = cursor.line; 
       printf("%d: %s, %s, %s\n", cursor.linecount, line->fields[0], line->fields[1], line->fields[2]);
 
@@ -182,7 +184,35 @@ int main(int argc, char * argv[])
          assert(strcmp(line->fields[2], "7") == 0);
       }
    }
+   assert(loops == 3);
+   free(file);
 
+   file = loadfile("escape3.csv");
+   cursor = csv_initcursor_f(file);
+   loops = 0;
+   while(csv_readline(&cursor))
+   {
+      loops++;
+      struct CsvLine * line = cursor.line; 
+      printf("%d: %s, %s, %s\n", cursor.linecount, line->fields[0], line->fields[1], line->fields[2]);
+
+      assert(cursor.linecount >= 1 && cursor.linecount <= 2);
+      assert(line->fieldcount == 3);
+
+      if(cursor.linecount == 1)
+      {
+         assert(strcmp(line->fields[0], "so") == 0);
+         assert(strcmp(line->fields[1], "this is the thing, and, yeah") == 0);
+         assert(strcmp(line->fields[2], "3") == 0);
+      }
+      else if(cursor.linecount == 2)
+      {
+         assert(strcmp(line->fields[0], "and then, this, happened,") == 0);
+         assert(strcmp(line->fields[1], "wow and") == 0);
+         assert(strcmp(line->fields[2], "9") == 0);
+      }
+   }
+   assert(loops == 2);
    free(file);
 
    printf("All pass\n");
