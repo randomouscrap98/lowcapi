@@ -273,12 +273,12 @@ void print_chatlineparse(struct CsvLine * line, ListenData * ld)
          line->fields[LCKEY_MSGUSER]);
 
       if(strchr(line->fields[LCKEY_CONTENTSTATE], 'E')) {
-         printf(CFORE_RESET CFORE_RED "%s(edit)", line->fields[LCKEY_CONTENTMSGID]);
+         printf(CFORE_RED "%s(edit)", line->fields[LCKEY_CONTENTMSGID]);
       }
       else {
-         printf(CFORE_RESET CFORE_D_WHITE "%s", line->fields[LCKEY_CONTENTMSGID]);
+         printf(CFORE_D_WHITE "%s", line->fields[LCKEY_CONTENTMSGID]);
       }
-      printf("\t" CFORE_RESET CFORE_D_MAGENTA "%s\n", line->fields[LCKEY_MSGDATE]);
+      printf("\t" CFORE_D_MAGENTA "%s\n", line->fields[LCKEY_MSGDATE]);
       printf(CFORE_RESET);
       print_wrapped_message(line->fields[LCKEY_MSG], ld->consolewidth);
    }
