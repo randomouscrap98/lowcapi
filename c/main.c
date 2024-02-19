@@ -209,6 +209,7 @@ typedef struct ListenData {
    char thisuser[LC_USERNAMEMAX + 1];
    bool parse_output;
    long mid;
+   int consolewidth;
 } ListenData;
 
 //chatgpt
@@ -219,11 +220,11 @@ void print_wrapped_message(const char *text, int width)
    int end = 0;
 
    while (start < len) {
-      end = start + width - 1;
+      end = start + width;
 
       if (end >= len) {
          // Print remaining text if it fits in one line
-         printf(" %.*s\n", len - start, &text[start]);
+         printf("%.*s\n", len - start, &text[start]);
          break;
       }
 
@@ -233,10 +234,10 @@ void print_wrapped_message(const char *text, int width)
 
       // If no space found, just print the line width characters
       if (end == start)
-         end = start + width - 1;
+         end = start + width;
 
       // Print the line
-      printf(" %.*s\n", end - start, &text[start]);
+      printf("%.*s\n", end - start, &text[start]);
 
       // Update start for next iteration
       start = end + 1;
@@ -279,7 +280,7 @@ void print_chatlineparse(struct CsvLine * line, ListenData * ld)
       }
       printf("\t" CFORE_RESET CFORE_D_MAGENTA "%s\n", line->fields[LCKEY_MSGDATE]);
       printf(CFORE_RESET);
-      print_wrapped_message(line->fields[LCKEY_MSG], 20);
+      print_wrapped_message(line->fields[LCKEY_MSG], ld->consolewidth);
    }
 
    printf(CFORE_RESET);
@@ -287,6 +288,7 @@ void print_chatlineparse(struct CsvLine * line, ListenData * ld)
 
 void handle_listen(HttpResponse * response, ListenData * ld)
 {
+   ld->consolewidth = lc_console_width();
    if(lc_responseok(response)) {
       // do the thing, we need to scan the csv and get the mid for 
       // future requests. Each line is output differently
