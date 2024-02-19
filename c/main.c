@@ -100,6 +100,59 @@ void auth_action(CapiValues * capi, bool use_token)
    printf("%s\n", capi->token);
 }
 
+// Parse each individual search result and output them to stdout. 
+void print_searchparse(char * output)
+{
+   struct CsvLineCursor cursor = csv_initcursor_f(output);
+   while(csv_readline(&cursor)) //These lines are cleaned up automatically
+   {
+      if(cursor.error) {
+         error("Error while parsing 'search' data: %d", cursor.error);
+      }
+
+      if(cursor.line->fieldcount < LC_CONTENTFIELDS) {
+         error("CSV failure: search output missing fields!");
+      }
+
+      char private = ' ';
+
+      if(!strchr(cursor.line->fields[LCKEY_CONTENTSTATE], 'R'))
+         private = 'P';
+
+      printf("%c%7s - %s\n", private, 
+            cursor.line->fields[LCKEY_CONTENTID],
+            cursor.line->fields[LCKEY_CONTENTNAME]);
+      //print("{}{:>7} - {}".format(private, row[6], row[0]))
+      //me.userid = atoi(cursor.line->fields[0]);
+      //sprintf(me.username, "%s", cursor.line->fields[1]);
+   }
+}
+
+void search_action(CapiValues * capi, bool parse_output)
+{
+   char search[SMALLINPUTLEN + 1];
+   fprintf(stderr, "Search: ");
+   if(!lc_getinput(search, SMALLINPUTLEN, stdin)) {
+      error("Couldn't read search?");
+   }
+
+   lc_makesearch(search, SMALLINPUTLEN);
+
+   HttpResponse * searchres = lc_getsearch(capi, search);
+   if(!lc_responseok(searchres)) {
+      error("Search error: %s", strvalid(searchres->response) ? searchres->response : "UNKNOWN");
+   }
+   else {
+      if(parse_output) {
+         print_searchparse(searchres->response);         
+      }
+      else {
+         printf("%s", searchres->response);         
+      }
+   }
+   lc_freeresponse(searchres);
+}
+
 
 // ----------------------------
 //       Main                  
@@ -130,6 +183,11 @@ int main(int argc, char * argv[])
    }
    else if(!strcmp(argv[1], "search")) {
       get_base_env(&capi, false);
+      search_action(&capi, false);
+   }
+   else if(!strcmp(argv[1], "psearch")) {
+      get_base_env(&capi, false);
+      search_action(&capi, true);
    }
    else if(!strcmp(argv[1], "send")) {
       get_base_env(&capi, true);

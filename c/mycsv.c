@@ -258,7 +258,10 @@ inline struct CsvLineCursor csv_initcursor_f(char * csv)
 
 #define __MYCSV_EXITREADLINE(rerr) { cursor->error = rerr; csv_freeline(cursor->line); return NULL; }
 
-// Make sure to cleanup the line returned from this
+// This function cleans up the lines it returns to you automatically, if 
+// you call it continuously in a while loop. Thus, if you exit the while 
+// loop early, you must clean up the line, otherwise all items will be
+// cleaned up for you
 struct CsvLine * csv_readline(struct CsvLineCursor * cursor)
 {
    // Always free existing line. This is kinda bad, but this makes the common

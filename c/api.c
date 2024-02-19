@@ -270,8 +270,6 @@ HttpResponse * lc_getlogin(CapiValues * capi, char * username, char * password)
    return result;
 }
 
-
-
 MeResponse lc_parseme(char * text)
 {
    if(!(text && strlen(text))) {
@@ -298,5 +296,14 @@ MeResponse lc_parseme(char * text)
    }
 
    return me;
+}
+
+HttpResponse * lc_getsearch(CapiValues * capi, char * search)
+{
+   RequestValue * values = NULL;
+   values = lc_addvalue(values, "search", search);
+   HttpResponse * result = lc_getapi(capi, "small/search", values);
+   lc_freeallvalues(values, NULL);
+   return result;
 }
 

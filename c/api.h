@@ -81,6 +81,7 @@ typedef struct CapiValues
 HttpResponse * lc_getapi(CapiValues * capi, char * endpoint, RequestValue * values);
 HttpResponse * lc_getme(CapiValues * capi);
 HttpResponse * lc_getlogin(CapiValues * capi, char * username, char * password);
+HttpResponse * lc_getsearch(CapiValues * capi, char * search);
 
 typedef struct MeResponse
 {
