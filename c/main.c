@@ -10,6 +10,7 @@
 #include "lcutils.h"
 
 #define SMALLINPUTLEN 100
+#define MESSAGELEN 3000
 
 
 // Retrieve the environment variables we will generally use
@@ -122,9 +123,6 @@ void print_searchparse(char * output)
       printf("%c%7s - %s\n", private, 
             cursor.line->fields[LCKEY_CONTENTID],
             cursor.line->fields[LCKEY_CONTENTNAME]);
-      //print("{}{:>7} - {}".format(private, row[6], row[0]))
-      //me.userid = atoi(cursor.line->fields[0]);
-      //sprintf(me.username, "%s", cursor.line->fields[1]);
    }
 }
 
@@ -151,6 +149,56 @@ void search_action(CapiValues * capi, bool parse_output)
       }
    }
    lc_freeresponse(searchres);
+}
+
+char * get_avatar(CapiValues * capi)
+{
+   char * avatar = NULL;
+   avatar = malloc(LC_USERNAMEMAX + 1);
+   if(avatar) {
+      HttpResponse * meres = lc_getme(capi);
+      if(lc_responseok(meres)) {
+         MeResponse me = lc_parseme(meres->response);
+         if(strlen(me.avatar) > LC_USERNAMEMAX) {
+            error("Avatar field too large!");
+         }
+         strcpy(avatar, me.avatar);
+      }
+      else {
+         error("Couldn't retrieve avatar, are you not logged in?");
+      }
+      lc_freeresponse(meres);
+   }
+   else {
+      error("Couldn't allocate memory for avatar!");
+   }
+   return avatar;
+}
+
+void send_action(CapiValues * capi, long room_id, bool lookup_avatar)
+{
+   char message[MESSAGELEN + 1];
+   fprintf(stderr, "Message: ");
+   if(!lc_getinput(message, MESSAGELEN, stdin)) {
+      error("Couldn't read message?");
+   }
+
+   char * avatar = NULL;
+
+   if(lookup_avatar) {
+      avatar = get_avatar(capi);
+   }
+
+   HttpResponse * messageres = lc_getpost(capi, room_id, message, avatar,
+         LC_DEFAULTMARKUP);
+   if(!lc_responseok(messageres)) {
+      error("Send error: %s", strvalid(messageres->response) ? 
+            messageres->response : "UNKNOWN");
+   }
+   else {
+      printf("%s", messageres->response);         
+   }
+   lc_freeresponse(messageres);
 }
 
 
@@ -190,7 +238,18 @@ int main(int argc, char * argv[])
       search_action(&capi, true);
    }
    else if(!strcmp(argv[1], "send")) {
+      if(argc < 3) {
+         error("You must provide at least a room id!");
+      }
       get_base_env(&capi, true);
+      send_action(&capi, atol(argv[2]), false);
+   }
+   else if(!strcmp(argv[1], "esend")) {
+      if(argc < 3) {
+         error("You must provide at least a room id!");
+      }
+      get_base_env(&capi, true);
+      send_action(&capi, atol(argv[2]), true);
    }
    else if(!strcmp(argv[1], "lilsten")) {
       get_base_env(&capi, true);

@@ -292,7 +292,8 @@ MeResponse lc_parseme(char * text)
       }
 
       me.userid = atoi(cursor.line->fields[0]);
-      sprintf(me.username, "%s", cursor.line->fields[1]);
+      snprintf(me.username, LC_USERNAMEMAX, "%s", cursor.line->fields[1]);
+      snprintf(me.avatar, LC_USERNAMEMAX, "%s", cursor.line->fields[2]);
    }
 
    return me;
@@ -303,6 +304,24 @@ HttpResponse * lc_getsearch(CapiValues * capi, char * search)
    RequestValue * values = NULL;
    values = lc_addvalue(values, "search", search);
    HttpResponse * result = lc_getapi(capi, "small/search", values);
+   lc_freeallvalues(values, NULL);
+   return result;
+}
+
+HttpResponse * lc_getpost(CapiValues * capi, long id, char * message,
+      char * avatar, char * markup)
+{
+   RequestValue * values = NULL;
+   values = lc_addvalue(values, "message", message);
+   if(avatar) {
+      values = lc_addvalue(values, "values["LC_COMMENTAVATAR"]", avatar);
+   }
+   if(markup) {
+      values = lc_addvalue(values, "values["LC_COMMENTMARKUP"]", markup);
+   }
+   char url[LC_URLPARTLENGTH + 1];
+   snprintf(url, LC_URLPARTLENGTH, "small/post/%ld", id);
+   HttpResponse * result = lc_getapi(capi, url, values);
    lc_freeallvalues(values, NULL);
    return result;
 }

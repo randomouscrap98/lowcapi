@@ -13,6 +13,9 @@
 #define LC_TOKENMAXLENGTH 256
 
 #define LC_TOKENEXPIRE 31536000
+#define LC_DEFAULTMARKUP "12y2"
+#define LC_COMMENTMARKUP "m"
+#define LC_COMMENTAVATAR "a"
 
 #define LCKEY_CONTENTNAME 0
 #define LCKEY_MSGUSER 1
@@ -82,11 +85,14 @@ HttpResponse * lc_getapi(CapiValues * capi, char * endpoint, RequestValue * valu
 HttpResponse * lc_getme(CapiValues * capi);
 HttpResponse * lc_getlogin(CapiValues * capi, char * username, char * password);
 HttpResponse * lc_getsearch(CapiValues * capi, char * search);
+HttpResponse * lc_getpost(CapiValues * capi, long id, char * message, char * avatar,
+      char * markup);
 
 typedef struct MeResponse
 {
-   char username[LC_USERNAMEMAX + 1];
    long userid;
+   char username[LC_USERNAMEMAX + 1];
+   char avatar[LC_USERNAMEMAX + 1];
 } MeResponse;
 
 MeResponse lc_parseme(char * text);
