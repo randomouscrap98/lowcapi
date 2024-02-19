@@ -204,14 +204,88 @@ void send_action(CapiValues * capi, long room_id, bool lookup_avatar)
    lc_freeresponse(messageres);
 }
 
-void print_chatlineparse(struct CsvLine * line)
+typedef struct ListenData {
+   char userlist[100 * (LC_USERNAMEMAX + 1)]; //Just some absurd amount, like whatever
+   char thisuser[LC_USERNAMEMAX + 1];
+   bool parse_output;
+   long mid;
+} ListenData;
+
+//chatgpt
+void print_wrapped_message(const char *text, int width) 
 {
-         //printf("%c%7s - %s\n", private, 
-         //      cursor.line->fields[LCKEY_CONTENTID],
-         //      cursor.line->fields[LCKEY_CONTENTNAME]);
+   int len = strlen(text);
+   int start = 0;
+   int end = 0;
+
+   while (start < len) {
+      end = start + width - 1;
+
+      if (end >= len) {
+         // Print remaining text if it fits in one line
+         printf(" %.*s\n", len - start, &text[start]);
+         break;
+      }
+
+      // Find the last space within the line width
+      while (end > start && text[end] != ' ')
+         end--;
+
+      // If no space found, just print the line width characters
+      if (end == start)
+         end = start + width - 1;
+
+      // Print the line
+      printf(" %.*s\n", end - start, &text[start]);
+
+      // Update start for next iteration
+      start = end + 1;
+   }
 }
 
-void handle_listen(HttpResponse * response, long * mid, bool parse_output)
+
+void print_chatlineparse(struct CsvLine * line, ListenData * ld)
+{
+   if(!strcmp(line->fields[LCKEY_MSGMODULE], "eventId")) 
+   {
+      return;
+   }
+   else if(!strcmp(line->fields[LCKEY_MSGMODULE], "userlist")) 
+   {
+      // We only really care about the non-zero userlists
+      if(strcmp(line->fields[LCKEY_CONTENTID], "0")) 
+      {
+         // If the userlist is different than what was given, we need to
+         // update the userlist and display it
+         if (strcmp(line->fields[LCKEY_MSG], ld->userlist)) 
+         {
+            snprintf(ld->userlist, sizeof(ld->userlist), "%s", line->fields[LCKEY_MSG]);
+            printf(CFORE_RESET CFORE_YELLOW "--Userlist: %s\t" CFORE_D_MAGENTA "%s\n",
+                  strlen(ld->userlist) ? ld->userlist : "EMPTY", line->fields[LCKEY_MSGDATE]);
+         }
+      }
+   }
+   else 
+   {
+      printf(CFORE_RESET "%s[%s] ", 
+         strcmp(line->fields[LCKEY_MSGUSER], ld->thisuser) ? CFORE_B_GREEN : CFORE_B_CYAN,
+         line->fields[LCKEY_MSGUSER]);
+
+      if(strchr(line->fields[LCKEY_CONTENTSTATE], 'E')) {
+         printf(CFORE_RESET CFORE_RED "%s(edit)", line->fields[LCKEY_CONTENTMSGID]);
+      }
+      else {
+         printf(CFORE_RESET CFORE_D_WHITE "%s", line->fields[LCKEY_CONTENTMSGID]);
+      }
+      printf("\t" CFORE_RESET CFORE_D_MAGENTA "%s\n", line->fields[LCKEY_MSGDATE]);
+      printf(CFORE_RESET);
+      print_wrapped_message(line->fields[LCKEY_MSG], 20);
+   }
+
+   printf(CFORE_RESET);
+}
+
+void handle_listen(HttpResponse * response, ListenData * ld)
 {
    if(lc_responseok(response)) {
       // do the thing, we need to scan the csv and get the mid for 
@@ -229,11 +303,11 @@ void handle_listen(HttpResponse * response, long * mid, bool parse_output)
 
          long thismid = atol(cursor.line->fields[LCKEY_CONTENTMSGID]);
 
-         if(thismid > *mid)
-            *mid = thismid;
+         if(thismid > ld->mid)
+            ld->mid = thismid;
 
-         if(parse_output) {
-            print_chatlineparse(cursor.line);
+         if(ld->parse_output) {
+            print_chatlineparse(cursor.line, ld);
          }
          else {
             cursor.line->start[cursor.line->length - 1] = 0;
@@ -251,19 +325,36 @@ void handle_listen(HttpResponse * response, long * mid, bool parse_output)
 // This is actually a loop
 void listen_action(CapiValues * capi, long room_id, bool parse_output, long get)
 {
-   long mid = -1;
+   ListenData ld;
+   ld.mid = -1;
+   ld.userlist[0] = 0;
+   ld.parse_output = parse_output;
+
    char rooms[33];
    sprintf(rooms, "%ld", room_id);
 
+   HttpResponse * meres = lc_getme(capi);
+   if(lc_responseok(meres)) {
+      MeResponse me = lc_parseme(meres->response);
+      if(strlen(me.username) > LC_USERNAMEMAX) {
+         error("Username field too large!");
+      }
+      strcpy(ld.thisuser, me.username);
+   }
+   else {
+      error("Couldn't retrieve username, are you not logged in?");
+   }
+   lc_freeresponse(meres);
+
    // First iteration of the loop just pulls some static chat, the rest
    // continuously pulls 
-   HttpResponse * response = lc_getchat(capi, mid, -get, rooms);
-   handle_listen(response, &mid, parse_output);
+   HttpResponse * response = lc_getchat(capi, ld.mid, -get, rooms);
+   handle_listen(response, &ld);
 
    while(true)
    {
-      response = lc_getchat(capi, mid, get, rooms);
-      handle_listen(response, &mid, parse_output);
+      response = lc_getchat(capi, ld.mid, get, rooms);
+      handle_listen(response, &ld);
    }
 }
 

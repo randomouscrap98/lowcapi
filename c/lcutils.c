@@ -9,6 +9,8 @@
 #else
 #include <unistd.h>
 #include <termios.h>
+#include <sys/ioctl.h>
+
 #endif
 
 #include "lcutils.h"
@@ -37,6 +39,11 @@ void lc_sleep(long milliseconds)
 {
    Sleep(milliseconds);
 }
+int lc_console_width() {
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    return csbi.srWindow.Right - csbi.srWindow.Left + 1;
+}
 #else
 // Taken mostly from https://www.gnu.org/software/libc/manual/html_node/getpass.html
 char * lc_getpass(char * input, size_t maxlen, FILE * stream)
@@ -64,6 +71,12 @@ char * lc_getpass(char * input, size_t maxlen, FILE * stream)
 void lc_sleep(long milliseconds)
 {
    sleep(milliseconds / 1000);
+}
+//chatgpt
+int lc_console_width() {
+    struct winsize w;
+    ioctl(0, TIOCGWINSZ, &w);
+    return w.ws_col;
 }
 #endif
 

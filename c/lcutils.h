@@ -21,6 +21,15 @@
 #define CFORE_B_MAGENTA ""
 #define CFORE_B_CYAN    ""
 #define CFORE_B_WHITE   ""
+
+#define CFORE_D_BLACK   ""
+#define CFORE_D_RED     ""
+#define CFORE_D_GREEN   ""
+#define CFORE_D_YELLOW  ""
+#define CFORE_D_BLUE    ""
+#define CFORE_D_MAGENTA ""
+#define CFORE_D_CYAN    ""
+#define CFORE_D_WHITE   ""
 #else
 /* ANSI escape codes for colors */
 #define CFORE_RESET   "\x1b[0m"
@@ -42,6 +51,15 @@
 #define CFORE_B_MAGENTA "\x1b[95m"
 #define CFORE_B_CYAN    "\x1b[96m"
 #define CFORE_B_WHITE   "\x1b[97m"
+
+#define CFORE_D_BLACK   "\x1b[2;30m"
+#define CFORE_D_RED     "\x1b[2;31m"
+#define CFORE_D_GREEN   "\x1b[2;32m"
+#define CFORE_D_YELLOW  "\x1b[2;33m"
+#define CFORE_D_BLUE    "\x1b[2;34m"
+#define CFORE_D_MAGENTA "\x1b[2;35m"
+#define CFORE_D_CYAN    "\x1b[2;36m"
+#define CFORE_D_WHITE   "\x1b[2;37m"
 #endif
 
 void error(char * fmt, ...);
@@ -51,6 +69,8 @@ char * lc_getpass(char * input, size_t maxlen, FILE * stream);
 char * lc_getinput(char * input, size_t maxlen, FILE * stream);
 
 void lc_sleep(long milliseconds);
+
+int lc_console_width();
 
 #define strvalid(s) (s && strlen(s))
 #define stringify(s) #s
