@@ -196,7 +196,7 @@ int main(int argc, char * argv[])
       struct CsvLine * line = cursor.line; 
       printf("%d: %s, %s, %s\n", cursor.linecount, line->fields[0], line->fields[1], line->fields[2]);
 
-      assert(cursor.linecount >= 1 && cursor.linecount <= 2);
+      assert(cursor.linecount >= 1 && cursor.linecount <= 3);
       assert(line->fieldcount == 3);
 
       if(cursor.linecount == 1)
@@ -211,8 +211,14 @@ int main(int argc, char * argv[])
          assert(strcmp(line->fields[1], "wow and") == 0);
          assert(strcmp(line->fields[2], "9") == 0);
       }
+      else if(cursor.linecount == 3)
+      {
+         assert(strcmp(line->fields[0], "\"sometimes you \" just yeah\"") == 0);
+         assert(strcmp(line->fields[1], "7") == 0);
+         assert(strcmp(line->fields[2], "1") == 0);
+      }
    }
-   assert(loops == 2);
+   assert(loops == 3);
    free(file);
 
    printf("All pass\n");

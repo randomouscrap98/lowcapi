@@ -7,7 +7,7 @@
 #include "api.h"
 #include "mycsv.h"
 
-#define PRINTURL
+//#define PRINTURL
 
 void lc_curlinit()
 {

@@ -115,7 +115,7 @@ char * csv_unescapefield(struct CsvField * field)
             next++;
 
             //Assume the field is escaped properly (for speed)
-            if(field->field[i] == CSV_FIELDDELIM)
+            if(field->field[i] == CSV_ENCLOSE)
                i++;
          }
 
