@@ -154,31 +154,7 @@ void search_action(CapiValues * capi, bool parse_output)
    lc_freeresponse(searchres);
 }
 
-char * get_avatar(CapiValues * capi)
-{
-   char * avatar = NULL;
-   avatar = malloc(LC_USERNAMEMAX + 1);
-   if(avatar) {
-      HttpResponse * meres = lc_getme(capi);
-      if(lc_responseok(meres)) {
-         MeResponse me = lc_parseme(meres->response);
-         if(strlen(me.avatar) > LC_USERNAMEMAX) {
-            error("Avatar field too large!");
-         }
-         strcpy(avatar, me.avatar);
-      }
-      else {
-         error("Couldn't retrieve avatar, are you not logged in?");
-      }
-      lc_freeresponse(meres);
-   }
-   else {
-      error("Couldn't allocate memory for avatar!");
-   }
-   return avatar;
-}
-
-void send_action(CapiValues * capi, long room_id, bool lookup_avatar)
+void send_action(CapiValues * capi, long room_id, char * avatar)
 {
    char message[MESSAGELEN + 1];
    fprintf(stderr, "Message: ");
@@ -186,10 +162,18 @@ void send_action(CapiValues * capi, long room_id, bool lookup_avatar)
       error("Couldn't read message?");
    }
 
-   char * avatar = NULL;
+   MeResponse me;
 
-   if(lookup_avatar) {
-      avatar = get_avatar(capi);
+   if(avatar == NULL) {
+      HttpResponse * meres = lc_getme(capi);
+      if(lc_responseok(meres)) {
+         me = lc_parseme(meres->response);
+         avatar = me.avatar;
+      }
+      else {
+         error("Couldn't retrieve avatar, are you not logged in?");
+      }
+      lc_freeresponse(meres);
    }
 
    HttpResponse * messageres = lc_getpost(capi, room_id, message, avatar,
@@ -372,9 +356,9 @@ int main(int argc, char * argv[])
 {
    if(argc < 2) {
       error("Must provide the action! Usage:\n%s\n%s\n%s\n%s",
-            " lowcapi [e]auth",
+            " lowcapi [p]auth",
             " lowcapi [p]search",
-            " lowcapi [e]send <roomid>",
+            " lowcapi send <roomid> [avatar]",
             " lowcapi [p]listen <roomid>"
            );
    }
@@ -387,7 +371,7 @@ int main(int argc, char * argv[])
       get_base_env(&capi, false);
       auth_action(&capi, false);
    }
-   else if(!strcmp(argv[1], "eauth")) {
+   else if(!strcmp(argv[1], "pauth")) {
       get_base_env(&capi, false);
       auth_action(&capi, true);
    }
@@ -402,12 +386,7 @@ int main(int argc, char * argv[])
    else if(!strcmp(argv[1], "send")) {
       require_room(argc);
       get_base_env(&capi, true);
-      send_action(&capi, atol(argv[2]), false);
-   }
-   else if(!strcmp(argv[1], "esend")) {
-      require_room(argc);
-      get_base_env(&capi, true);
-      send_action(&capi, atol(argv[2]), true);
+      send_action(&capi, atol(argv[2]), argc >= 4 ? argv[3] : NULL);
    }
    else if(!strcmp(argv[1], "listen")) {
       require_room(argc);

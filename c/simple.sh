@@ -4,7 +4,7 @@ set -e
 
 if [ -z $CAPI_TOKEN ]
 then
-   CAPI_TOKEN=$(./lowcapi eauth)
+   CAPI_TOKEN=$(./lowcapi pauth)
 fi
 
 export CAPI_TOKEN

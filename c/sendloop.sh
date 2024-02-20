@@ -16,7 +16,7 @@ do
       echo "File empty: exiting program"
       exit 2
    fi
-   cat "$file" | ./lowcapi esend $room
+   cat "$file" | ./lowcapi send $room
    rm "$file"
 done
 
